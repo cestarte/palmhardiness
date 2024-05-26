@@ -5,45 +5,47 @@ from werkzeug.exceptions import HTTPException
 import json
 from exceptions import InvalidApiUsage
 import palm_api
+import palm_web
+import sys
 
 app = Flask(__name__)
 app.config['Database'] = './palmhardiness.db'
 
 #app.register_blueprint(event, __name__)
-app.register_blueprint(palm_api.api , url_prefix='/api/palm')
+app.register_blueprint(palm_web.web, url_prefix='/palm')
+app.register_blueprint(palm_api.api , url_prefix='/api/palm', template_folder='templates')
 #app.register_blueprint(create, __name__)
 #app.register_blueprint(zone, __name__)
 
+# # https://flask.palletsprojects.com/en/3.0.x/errorhandling/#error-logging-tools
+# @app.errorhandler(Exception)
+# def handle_exception(e):
+#     """Handle non-HTTP errors."""
+#     # pass through HTTP errors
+#     if isinstance(e, HTTPException):
+#         return e
+#     g.e = e
+#     # now handling non-HTTP exceptions only
+#     return render_template("500_generic.html"), 500
 
-# https://flask.palletsprojects.com/en/3.0.x/errorhandling/#error-logging-tools
-@app.errorhandler(Exception)
-def handle_exception(e):
-    """Handle non-HTTP errors."""
-    # pass through HTTP errors
-    if isinstance(e, HTTPException):
-        return e
-    g.e = e
-    # now handling non-HTTP exceptions only
-    return render_template("500_generic.html"), 500
+# # https://flask.palletsprojects.com/en/3.0.x/errorhandling/#error-logging-tools
+# @app.errorhandler(HTTPException)
+# def handle_exception(e):
+#     """Return JSON instead of HTML for HTTP errors."""
+#     # start with the correct headers and status code from the error
+#     response = e.get_response()
+#     # replace the body with JSON
+#     response.data = json.dumps({
+#         "code": e.code,
+#         "name": e.name,
+#         "description": e.description,
+#     })
 
-# https://flask.palletsprojects.com/en/3.0.x/errorhandling/#error-logging-tools
-@app.errorhandler(HTTPException)
-def handle_exception(e):
-    """Return JSON instead of HTML for HTTP errors."""
-    # start with the correct headers and status code from the error
-    response = e.get_response()
-    # replace the body with JSON
-    response.data = json.dumps({
-        "code": e.code,
-        "name": e.name,
-        "description": e.description,
-    })
-
-    if request.path.startswith('/api/'):
-        response.content_type = "application/json"
-        return response
-    else:
-        return render_template("error", response)
+#     if request.path.startswith('/api/'):
+#         response.content_type = "application/json"
+#         return response
+#     else:
+#         return render_template("error", response)
 
 
 

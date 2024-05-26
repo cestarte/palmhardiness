@@ -10,7 +10,8 @@ api = Blueprint('api', __name__)
 def get_all():
     records = query_db(palm.queries['get_all'])
     objs:list[Palm] = [palm.read_from_row(row) for row in records]
-    return [json.dumps(o, cls=PalmSerializer) for o in objs]
+    return json.dumps(objs, cls=PalmSerializer)
+    #return [json.dumps(o, cls=PalmSerializer) for o in objs]
 
 @api.route('/<int:palm_id>', methods=['GET'])
 def palm_by_id(palm_id):
