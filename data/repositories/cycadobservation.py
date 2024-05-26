@@ -1,40 +1,49 @@
 import openpyxl
-from datetime import datetime
 import sqlite3
+from data.models.cycadobservation import CycadObservation
 
-class PalmObservation:
-    def __init__(self):
-        self.id:int | None = None
-        self.legacy_id:int
-        self.palm_id:int
-        self.palm_legacy_id:int
-        self.who_reported:str
-        self.city:str | None = None
-        self.state:str | None = None
-        self.country:str
-        self.damage_id:int
-        self.damage_legacy_id:int
-        self.event_legacy_id:int
-        self.event_id:int
-        self.description:str
-        self.source:str
-        self.low_temp:float
-        self.last_modified:datetime = datetime.now()
-        self.who_modified:str = "Excel Importer"
+queries = {
+    "drop": """
+DROP TABLE IF EXISTS "CycadObservation"
+    """,
+    "create": """
+CREATE TABLE IF NOT EXISTS "CycadObservation" (
+    "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "LegacyId" integer,
+    "LastModified" timestamp NOT NULL,
+    "WhoModified" varchar(128) NOT NULL,
+    "CycadId" integer NOT NULL,
+    "CycadLegacyId" integer NOT NULL,
+    "WhoReported" varchar(512) NOT NULL,
+    "City" varchar(512) NOT NULL,
+    "State" varchar(512),
+    "Country" varchar NOT NULL,
+    "LowTemp" real NOT NULL,
+    "DamageId" integer NOT NULL,
+    "DamageLegacyId" integer NOT NULL,
+    "Description" varchar,
+    "Source" varchar,
+    "EventId" integer,
+    "EventLegacyId" integer,
+    FOREIGN KEY (CycadId) REFERENCES "Cycad" (Id),
+    FOREIGN KEY (DamageId) REFERENCES "Damage" (Id),
+    FOREIGN KEY (EventId) REFERENCES "Event" (Id)
+);
+    """
+}
 
-
-def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> list[PalmObservation]:
-    items:list[PalmObservation] = []
-    print("Reading palm hardiness observations from spreadsheet...", sheet)
+def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> list[CycadObservation]:
+    items:list[CycadObservation] = []
+    print("Reading cycad hardiness observations from spreadsheet...", sheet)
     wb = openpyxl.load_workbook(workbook)
     ws = wb[sheet]
 
     for row in ws.iter_rows(min_row = first_row_with_data, values_only = True):
-        i = PalmObservation()
+        i = CycadObservation()
         i.id = None
         i.legacy_id = row[0]
-        i.palm_id = None
-        i.palm_legacy_id = row[1]
+        i.cycad_id = None
+        i.cycad_legacy_id = row[1]
         i.damage_id = None
         i.damage_legacy_id = row[7]
         i.event_id = None
@@ -46,8 +55,8 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> lis
         i.low_temp = row[6]
         i.description = row[8]
         i.source = row[9]
-
-        if '2023' in workbook and i.legacy_id == 4912 and i.event_id == None:
+        
+        if '2023' in workbook and i.legacy_id == 71 and i.event_id == None:
             print("[WARNING] Correcting for single 2023 observation missing event id")
             i.event_legacy_id = 85
 
@@ -57,7 +66,7 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> lis
     return items
 
 
-def translate_ids(database_path:str, observations:list[PalmObservation]) -> list[PalmObservation]:
+def translate_ids(database_path:str, observations:list[CycadObservation]) -> list[CycadObservation]:
     """Populate the relationship ids on the observation. To do that, use the 
     excel legacy ids to look up the id in our database."""
     try:
@@ -67,24 +76,24 @@ def translate_ids(database_path:str, observations:list[PalmObservation]) -> list
         cur = con.cursor()
 
         for o in observations:
-            # Find the database's palm Id by using the legacy id from the Excel
+            # Find the database's cycad Id by using the legacy id from the Excel
             cur.execute(
                 """
 SELECT Id
-FROM Palm
+FROM Cycad
 WHERE LegacyId = ?
 LIMIT 1
 """,
-                (o.palm_legacy_id,),
+                (o.cycad_legacy_id,),
             )
             result = cur.fetchone()
             if result is None:
                 print(
-                    f"[WARNING] Couldn't find a matching palm for legacy id {o.palm_legacy_id}. Skipping..."
+                    f"[WARNING] Couldn't find a matching cycad for legacy id {o.cycad_legacy_id}. Skipping..."
                 )
                 continue
             else:
-                o.palm_id = result[0]
+                o.cycad_id = result[0]
 
             # Find the database's event Id by using the legacy id from the Excel
             # Note: 0 in the Excel means no event recorded
@@ -137,9 +146,9 @@ LIMIT 1
     return observations
 
 
-def write_to_database(database_path:str, observations:list[PalmObservation]) -> None:
-    print("Inserting palmobservations to database...")
-    current_observation:PalmObservation | None = None
+def write_to_database(database_path:str, observations:list[CycadObservation]):
+    print("Inserting cycadobservations to database...")
+    current_observation:CycadObservation | None = None
     try:
         con = sqlite3.connect(
             database_path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
@@ -150,8 +159,8 @@ def write_to_database(database_path:str, observations:list[PalmObservation]) -> 
             current_observation = o
             data = (
                 o.legacy_id,
-                o.palm_id,
-                o.palm_legacy_id,
+                o.cycad_id,
+                o.cycad_legacy_id,
                 o.who_reported,
                 o.city,
                 o.state,
@@ -168,14 +177,15 @@ def write_to_database(database_path:str, observations:list[PalmObservation]) -> 
             )
 
             cur.execute(
-                "INSERT INTO PalmObservation (LegacyId, PalmId, PalmLegacyId, WhoReported, City, State, Country, DamageId, DamageLegacyId, EventId, EventLegacyId, Description, Source, LowTemp, LastModified, WhoModified) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO CycadObservation (LegacyId, CycadId, CycadLegacyId, WhoReported, City, State, Country, DamageId, DamageLegacyId, EventId, EventLegacyId, Description, Source, LowTemp, LastModified, WhoModified) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 data,
             )
             con.commit()
     except sqlite3.Error as error:
         print("[ERROR] Failed while inserting observations into sqlite.", error)
-        if current_observation is not None and isinstance(current_observation, PalmObservation):
+        if current_observation is not None and isinstance(current_observation, CycadObservation):
             print("Here's the observation which caused the error:", vars(current_observation))
     finally:
         if con:
             con.close()
+

@@ -1,20 +1,49 @@
 import openpyxl
-from datetime import datetime
 import sqlite3
-import zone
+from data.models.palm import Palm
 
-class Palm:
-    def __init__(self):
-        self.id = None
-        self.legacy_id = None
-        self.genus = None
-        self.species = None
-        self.variety = None
-        self.common_name = None
-        self.zone_id = 0
-        self.zone_name = None
-        self.last_modified = datetime.now()
-        self.who_modified = "Excel Importer"
+queries = {
+    "get_all": """
+SELECT *
+FROM Palm
+ORDER BY Genus, Species, Variety
+    """,
+    "get_one": """
+SELECT *
+FROM Palm
+WHERE Id = ?
+    """,
+    "drop": """
+DROP TABLE IF EXISTS "Palm"
+    """,
+    "create": """
+CREATE TABLE IF NOT EXISTS "Palm" (
+  "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  "LegacyId" integer,
+  "Genus" varchar(512) NOT NULL,
+  "Species" varchar(256),
+  "Variety" varchar(256),
+  "CommonName" varchar(256),
+  "ZoneId" integer NOT NULL,
+  "LastModified" timestamp NOT NULL,
+  "WhoModified" varchar(128) NOT NULL,
+  FOREIGN KEY (ZoneId) REFERENCES "Zone" (Id)
+);
+    """
+}
+
+def read_from_row(row:sqlite3.Row) -> Palm:
+    palm = Palm()
+    palm.id = row["Id"]
+    palm.legacy_id = row["LegacyId"]
+    palm.genus = row["Genus"]
+    palm.species = row["Species"]
+    palm.variety = row["Variety"]
+    palm.common_name = row["CommonName"]
+    palm.zone_id = row["ZoneId"]
+    palm.last_modified = row["LastModified"]
+    palm.who_modified = row["WhoModified"]
+    return palm
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Palm]:
     palms:list[Palm] = []

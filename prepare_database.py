@@ -1,58 +1,31 @@
 import sqlite3
 import argparse
+from data.repositories import zone
+from data.repositories import damage
+from data.repositories import synonym
+from data.repositories import event
+from data.repositories import palm
+from data.repositories import palmsynonym
+from data.repositories import palmobservation
+from data.repositories import cycad
+from data.repositories import cycadobservation
 
-
-def drop_tables(databasePath):
-    drop_zone_query = """
-    DROP TABLE IF EXISTS "Zone"
-    """
-
-    drop_synonym_query = """
-    DROP TABLE IF EXISTS "Synonym"
-    """
-
-    drop_event_query = """
-    DROP TABLE IF EXISTS "Event"
-    """
-
-    drop_damage_query = """
-    DROP TABLE IF EXISTS "Damage"
-    """
-
-    drop_cycad_query = """
-    DROP TABLE IF EXISTS "Cycad"
-    """
-
-    drop_palm_query = """
-    DROP TABLE IF EXISTS "Palm"
-    """
-
-    drop_palm_observation_query = """
-    DROP TABLE IF EXISTS "PalmObservation"
-    """
-    drop_palm_synonym_query = """
-    DROP TABLE IF EXISTS "PalmSynonym"
-    """
-
-    drop_cycad_observation_query = """
-    DROP TABLE IF EXISTS "CycadObservation"
-    """
-
+def drop_tables(database_path):
     drop_queries = [
-        ("Cycad Observation", drop_cycad_observation_query),
-        ("Cycad", drop_cycad_query),
-        ("Palm Synonym", drop_palm_synonym_query),
-        ("PalmObservation", drop_palm_observation_query),
-        ("Palm", drop_palm_query),
-        ("Damage", drop_damage_query),
-        ("Event", drop_event_query),
-        ("Synonym", drop_synonym_query),
-        ("Zone", drop_zone_query),
+        ("Cycad Observation", cycadobservation.queries['drop']),
+        ("Cycad", cycad.queries['drop']),
+        ("Palm Synonym", palmsynonym.queries['drop']),
+        ("PalmObservation", palmobservation.queries['drop']),
+        ("Palm", palm.queries['drop']),
+        ("Damage", damage.queries['drop']),
+        ("Event", event.queries['drop']),
+        ("Synonym", synonym.queries['drop']),
+        ("Zone", zone.queries['drop']),
     ]
 
     print("Dropping tables...")
     try:
-        con = sqlite3.connect(databasePath)
+        con = sqlite3.connect(database_path)
         cur = con.cursor()
         for query in drop_queries:
             print("\t" + query[0])
@@ -66,158 +39,22 @@ def drop_tables(databasePath):
     print("...done.")
 
 
-def create_tables(databasePath):
-    create_zone_query = """
-CREATE TABLE IF NOT EXISTS "Zone" (
-  "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-  "Name" varchar(5) NOT NULL,
-  "MinTempF" integer NOT NULL,
-  "MaxTempF" integer NOT NULL,
-  "LastModified" timestamp NOT NULL,
-  "WhoModified" varchar(128) NOT NULL
-);
-    """
-
-    create_synonym_query = """
-    CREATE TABLE IF NOT EXISTS "Synonym" (
-      "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-      "PalmLegacyId" integer,
-      "LastModified" timestamp NOT NULL,
-      "WhoModified" varchar(128) NOT NULL,
-      "Genus" varchar(256),
-      "Species" varchar(128),
-      "Variety" varchar(128)
-    );
-    """
-
-    create_event_query = """
-    CREATE TABLE IF NOT EXISTS "Event" (
-      "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-      "LegacyId" integer,
-      "LastModified" timestamp NOT NULL,
-      "WhoModified" varchar(128) NOT NULL,
-      "WhoReported" varchar(265) NOT NULL,
-      "City" varchar(512) NOT NULL,
-      "State" varchar(512) NOT NULL,
-      "Country" varchar(512) NOT NULL,
-      "Name" varchar NOT NULL,
-      "Description" varchar NOT NULL
-    );
-    """
-
-    create_damage_query = """
-    CREATE TABLE IF NOT EXISTS "Damage" (
-      "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-      "LegacyId" integer,
-      "Text" varchar(128) NOT NULL,
-      "LastModified" timestamp NOT NULL,
-      "WhoModified" varchar(128) NOT NULL
-    );
-    """
-
-    create_cycad_query = """
-    CREATE TABLE IF NOT EXISTS "Cycad" (
-    "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-    "LegacyId" integer,
-    "Genus" varchar(512) NOT NULL,
-    "Species" varchar(256),
-    "Variety" varchar(256),
-    "CommonName" varchar(256),
-    "ZoneId" integer NOT NULL,
-    "LastModified" timestamp NOT NULL,
-    "WhoModified" varchar(128) NOT NULL,
-    FOREIGN KEY (ZoneId) REFERENCES "Zone" (Id)
-    );
-    """
-
-    create_palm_query = """
-CREATE TABLE IF NOT EXISTS "Palm" (
-  "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-  "LegacyId" integer,
-  "Genus" varchar(512) NOT NULL,
-  "Species" varchar(256),
-  "Variety" varchar(256),
-  "CommonName" varchar(256),
-  "ZoneId" integer NOT NULL,
-  "LastModified" timestamp NOT NULL,
-  "WhoModified" varchar(128) NOT NULL,
-  FOREIGN KEY (ZoneId) REFERENCES "Zone" (Id)
-);
-    """
-
-    create_palm_observation_query = """
-    CREATE TABLE IF NOT EXISTS "PalmObservation" (
-      "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-      "LegacyId" integer,
-      "LastModified" timestamp NOT NULL,
-      "WhoModified" varchar(128) NOT NULL,
-      "PalmId" integer NOT NULL,
-      "PalmLegacyId" integer NOT NULL,
-      "WhoReported" varchar(512) NOT NULL,
-      "City" varchar(512) NOT NULL,
-      "State" varchar(512),
-      "Country" varchar NOT NULL,
-      "LowTemp" real NOT NULL,
-      "DamageId" integer NOT NULL,
-      "DamageLegacyId" integer NOT NULL,
-      "Description" varchar,
-      "Source" varchar,
-      "EventId" integer,
-      "EventLegacyId" integer,
-      FOREIGN KEY (PalmId) REFERENCES "Palm" (Id),
-      FOREIGN KEY (DamageId) REFERENCES "Damage" (Id),
-      FOREIGN KEY (EventId) REFERENCES "Event" (Id)
-    );
-    """
-    create_palm_synonym_query = """
-    CREATE TABLE IF NOT EXISTS "PalmSynonym" (
-      "PalmId" integer NOT NULL,
-      "SynonymId" integer NOT NULL,
-      FOREIGN KEY (PalmId) REFERENCES "Palm" (Id),
-      FOREIGN KEY (SynonymId) REFERENCES "Synonym" (Id)
-    );
-    """
-
-    create_cycad_observation_query = """
-    CREATE TABLE IF NOT EXISTS "CycadObservation" (
-      "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-      "LegacyId" integer,
-      "LastModified" timestamp NOT NULL,
-      "WhoModified" varchar(128) NOT NULL,
-      "CycadId" integer NOT NULL,
-      "CycadLegacyId" integer NOT NULL,
-      "WhoReported" varchar(512) NOT NULL,
-      "City" varchar(512) NOT NULL,
-      "State" varchar(512),
-      "Country" varchar NOT NULL,
-      "LowTemp" real NOT NULL,
-      "DamageId" integer NOT NULL,
-      "DamageLegacyId" integer NOT NULL,
-      "Description" varchar,
-      "Source" varchar,
-      "EventId" integer,
-      "EventLegacyId" integer,
-      FOREIGN KEY (CycadId) REFERENCES "Cycad" (Id),
-      FOREIGN KEY (DamageId) REFERENCES "Damage" (Id),
-      FOREIGN KEY (EventId) REFERENCES "Event" (Id)
-    );
-    """
-
+def create_tables(database_path):
     create_queries = [
-        ("Zone", create_zone_query),
-        ("Synonym", create_synonym_query),
-        ("Event", create_event_query),
-        ("Damage", create_damage_query),
-        ("Palm", create_palm_query),
-        ("PalmObservation", create_palm_observation_query),
-        ("Palm Synonym", create_palm_synonym_query),
-        ("Cycad", create_cycad_query),
-        ("Cycad Observation", create_cycad_observation_query),
+        ("Zone", zone.queries['create']),
+        ("Synonym", synonym.queries['create']),
+        ("Event", event.queries['create']),
+        ("Damage", damage.queries['create']),
+        ("Palm", palm.queries['create']),
+        ("PalmObservation", palmobservation.queries['create']),
+        ("Palm Synonym", palmsynonym.queries['create']),
+        ("Cycad", cycad.queries['create']),
+        ("Cycad Observation", cycadobservation.queries['create']),
     ]
 
     print("Creating tables...")
     try:
-        con = sqlite3.connect(databasePath)
+        con = sqlite3.connect(database_path)
         cur = con.cursor()
         for query in create_queries:
             print("\t" + query[0])
@@ -232,7 +69,7 @@ CREATE TABLE IF NOT EXISTS "Palm" (
 
 
 def main():
-    database_path = "PalmTalk.db"
+    database_path = "palmhardiness.db"
     parser = argparse.ArgumentParser(
         description="Prepare the database schema for importing from Excel."
     )
@@ -245,7 +82,7 @@ def main():
     parser.add_argument(
         "-p",
         "--path",
-        help="Specify the database full path. Default: PalmTalk.db",
+        help="Specify the database full path. Default: palmhardiness.db",
     )
 
     args = parser.parse_args()

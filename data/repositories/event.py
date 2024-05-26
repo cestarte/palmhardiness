@@ -1,19 +1,26 @@
 import openpyxl
-from datetime import datetime
 import sqlite3
+from data.models.event import Event
 
-class Event:
-    def __init__(self):
-        self.id:int | None = None
-        self.legacy_id:int | None = None
-        self.who_reported:str = "Unknown"
-        self.city:str = "Unknown"
-        self.state:str = "Unknown"
-        self.country:str = "Unknown"
-        self.name:str = "Unknown"
-        self.description:str = "Unknown"
-        self.last_modified:datetime = datetime.now()
-        self.who_modified:str = "Excel Importer"
+queries = {
+    "drop": """
+DROP TABLE IF EXISTS "Event"
+    """,
+    "create": """
+CREATE TABLE IF NOT EXISTS "Event" (
+    "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "LegacyId" integer,
+    "LastModified" timestamp NOT NULL,
+    "WhoModified" varchar(128) NOT NULL,
+    "WhoReported" varchar(265) NOT NULL,
+    "City" varchar(512) NOT NULL,
+    "State" varchar(512) NOT NULL,
+    "Country" varchar(512) NOT NULL,
+    "Name" varchar NOT NULL,
+    "Description" varchar NOT NULL
+);
+    """
+}
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Event]:
     events:list[Event] = []
@@ -68,3 +75,4 @@ def write_to_database(database_path:str, events:list[Event]) -> None:
     finally:
         if con:
             con.close()
+

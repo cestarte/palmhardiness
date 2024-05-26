@@ -1,14 +1,21 @@
 import openpyxl
-from datetime import datetime
 import sqlite3
+from data.models.damage import Damage
 
-class Damage:
-    def __init__(self):
-        self.id:int | None = None
-        self.legacy_id:int | None = None
-        self.text:str = "Unknown"
-        self.last_modified:datetime = datetime.now()
-        self.who_modified:str = "Excel Importer"
+queries = {
+    "drop": """
+DROP TABLE IF EXISTS "Damage"
+    """,
+    "create": """
+CREATE TABLE IF NOT EXISTS "Damage" (
+    "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "LegacyId" integer,
+    "Text" varchar(128) NOT NULL,
+    "LastModified" timestamp NOT NULL,
+    "WhoModified" varchar(128) NOT NULL
+);
+    """
+}
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Damage]:
     damages:list[Damage] = []
@@ -51,3 +58,4 @@ def write_to_database(database_path:str, damages:list[Damage]) -> None:
     finally:
         if con:
             con.close()
+

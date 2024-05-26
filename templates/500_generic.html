@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>500 Error - PCH</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+</head>
+
+<body>
+    <section class="hero is-primary mb-6">
+        <div class="hero-body">
+            <p class="title">Something went wrong!</p>
+            <p class="subtitle">500</p>
+        </div>
+    </section>
+    <div class="container is-centered">
+        <p>Try refreshing the page or go back to the <a href="/">homepage</a>.</p>
+        <p>Details:</p>
+        <code>
+            {% if g.e %}
+            {{ g.e }}
+            {% endif %}
+        </code>
+    </div>
+</body>
+
+</html>

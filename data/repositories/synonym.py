@@ -1,16 +1,23 @@
 import openpyxl
-from datetime import datetime
 import sqlite3
+from data.models.synonym import Synonym
 
-class Synonym:
-    def __init__(self):
-        self.id:int | None = None
-        self.palm_legacy_id:int | None = None
-        self.genus:str = "Unknown"
-        self.species:str = "Unknown"
-        self.variety:str = "Unknown"
-        self.last_modified:datetime = datetime.now()
-        self.who_modified:str = "Excel Importer"
+queries = {
+    "drop": """
+DROP TABLE IF EXISTS "Synonym"
+    """,
+    "create": """
+CREATE TABLE IF NOT EXISTS "Synonym" (
+    "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "PalmLegacyId" integer,
+    "LastModified" timestamp NOT NULL,
+    "WhoModified" varchar(128) NOT NULL,
+    "Genus" varchar(256),
+    "Species" varchar(128),
+    "Variety" varchar(128)
+);
+    """
+}
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Synonym]:
     items:list[Synonym] = []
@@ -66,32 +73,3 @@ def write_to_database(database_path:str, synonyms:list[Synonym]) -> None:
         if con:
             con.close()
 
-
-# run connect after both synonyms & palms have been written to db
-def connect(database_path:str) -> None:
-    """Connect palm synonym relationships."""
-    try:
-        con = sqlite3.connect(
-            database_path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
-        )
-        cur = con.cursor()
-        cur.execute(
-            """
-INSERT INTO PalmSynonym (PalmId, SynonymId)
-SELECT * FROM (
-	SELECT 
-		S.Id AS SynonymId
-		,P.Id AS PalmId
-	FROM Synonym AS S
-	INNER JOIN Palm AS P ON S.PalmLegacyId = P.LegacyId
-)
-
-""",
-        )
-        con.commit()
-
-    except sqlite3.Error as error:
-        print("Error while connecting synonyms in sqlite.", error)
-    finally:
-        if con:
-            con.close()

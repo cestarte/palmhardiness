@@ -1,12 +1,14 @@
 import argparse
-import zone
-import damage
-import synonym
-import event
-import palm
-import palmobservation
-import cycad
-import cycadobservation
+from data.repositories import zone
+from data.repositories import damage
+from data.repositories import synonym
+from data.repositories import event
+from data.repositories import palm
+from data.repositories import palmsynonym
+from data.repositories import palmobservation
+from data.repositories import cycad
+from data.repositories import cycadobservation
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -15,7 +17,7 @@ def main():
     parser.add_argument(
         "-p",
         "--path",
-        help="Specify the database full path. Default: PalmTalk.db",
+        help="Specify the database full path. Default: PalmHardiness.db",
     )
     parser.add_argument(
         "-e",
@@ -24,7 +26,7 @@ def main():
         required=True
     )
 
-    database_path = "PalmTalk.db"
+    database_path = "PalmHardiness.db"
 
     args = parser.parse_args()
     excel_path = args.excel
@@ -46,7 +48,7 @@ def main():
     palms = palm.read_from_excel(excel_path, "Palms_tbl")
     palm.write_to_database(database_path, palms)
 
-    synonym.connect(database_path)
+    palmsynonym.connect(database_path)
 
     palmobservations = palmobservation.read_from_excel(excel_path, "HardinessPalms_tbl")
     palmobservations = palmobservation.translate_ids(database_path, palmobservations)

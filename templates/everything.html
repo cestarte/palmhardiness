@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% block title %}Everything{% endblock %}
+{% block header %}
+<section class="hero is-primary">
+  <div class="hero-body">
+    <p class="title">Everything</p>
+    <p class="subtitle">Primary subtitle</p>
+  </div>
+</section>
+{% endblock %}
+{% block content %}
+{%if rows %}
+<div class="table-container">
+  <table class="table is-striped is-fullwidth">
+    <thead>
+      <tr class="is-primary">
+        <th>Low Temp</th>
+        <th>Genus</th>
+        <th>Species</th>
+        <th>Variety</th>
+        <th>USDA Zone</th>
+        <th>Result</th>
+        <th>City</th>
+        <th>Country</th>
+        <th>State</th>
+        <th>Event Name</th>
+        <th>Event Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td>{{row['LowTemp']}}</td>
+        <td>{{row['Genus']}}</td>
+        <td>{{row['Species']}}</td>
+        <td>{{row['Variety']}}</td>
+        <td>{{row['USDA Zone']}}</td>
+        <td>{{row['Result']}}</td>
+        <td>{{row['City']}}</td>
+        <td>{{row['Country']}}</td>
+        <td>{{row['State']}}</td>
+        <td>{{row['Event Name']}}</td>
+        <td>{{row['Event Desc']}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<nav class="pagination" role="navigation" aria-label="pagination">
+  <a href="#" class="pagination-previous">Previous</a>
+  <a href="#" class="pagination-next">Next page</a>
+  <ul class="pagination-list">
+    <li>
+      <a href="#" class="pagination-link" aria-label="Goto page 1">1</a>
+    </li>
+    <li>
+      <span class="pagination-ellipsis">&hellip;</span>
+    </li>
+    <li>
+      <a href="#" class="pagination-link" aria-label="Goto page 45">45</a>
+    </li>
+    <li>
+      <a class="pagination-link is-current" aria-label="Page 46" aria-current="page">46</a>
+    </li>
+    <li>
+      <a href="#" class="pagination-link" aria-label="Goto page 47">47</a>
+    </li>
+    <li>
+      <span class="pagination-ellipsis">&hellip;</span>
+    </li>
+    <li>
+      <a href="#" class="pagination-link" aria-label="Goto page 86">86</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

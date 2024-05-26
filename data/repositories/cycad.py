@@ -1,20 +1,24 @@
 import openpyxl
-from datetime import datetime
 import sqlite3
-import zone
+from data.models.cycad import Cycad
 
-class Cycad:
-    def __init__(self):
-        self.id = None
-        self.legacy_id = None
-        self.genus = None
-        self.species = None
-        self.variety = None
-        self.common_name = None
-        self.zone_id = 0
-        self.zone_name = None
-        self.last_modified = datetime.now()
-        self.who_modified = "Excel Importer"
+queries = {
+    "drop": "DROP TABLE IF EXISTS cycad",
+    "create": """
+CREATE TABLE IF NOT EXISTS "Cycad" (
+"Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+"LegacyId" integer,
+"Genus" varchar(512) NOT NULL,
+"Species" varchar(256),
+"Variety" varchar(256),
+"CommonName" varchar(256),
+"ZoneId" integer NOT NULL,
+"LastModified" timestamp NOT NULL,
+"WhoModified" varchar(128) NOT NULL,
+FOREIGN KEY (ZoneId) REFERENCES "Zone" (Id)
+);
+    """
+}
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Cycad]:
     cycads:list[Cycad] = []
@@ -90,3 +94,8 @@ LIMIT 1
     finally:
         if con:
             con.close()
+
+
+
+
+

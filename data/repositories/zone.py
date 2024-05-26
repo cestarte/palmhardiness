@@ -1,15 +1,22 @@
 import openpyxl
-from datetime import datetime
 import sqlite3
+from data.models.zone import Zone
 
-class Zone:
-    def __init__(self):
-        self.id:int | None = None
-        self.name:str = "Unknown"
-        self.min:float = -1.0
-        self.max:float = 1.0
-        self.last_modified:datetime = datetime.now()
-        self.who_modified:str = "Excel Importer"
+queries = {
+    "drop": """
+DROP TABLE IF EXISTS "Zone"
+    """,
+    "create": """
+CREATE TABLE IF NOT EXISTS "Zone" (
+  "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  "Name" varchar(5) NOT NULL,
+  "MinTempF" integer NOT NULL,
+  "MaxTempF" integer NOT NULL,
+  "LastModified" timestamp NOT NULL,
+  "WhoModified" varchar(128) NOT NULL
+);
+    """
+}
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Zone]:
     zones:list[Zone] = []
@@ -55,3 +62,4 @@ def write_to_database(database_path:str, zones:list[Zone]) -> None:
     finally:
         if con:
             con.close()
+
