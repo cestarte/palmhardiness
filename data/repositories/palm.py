@@ -3,15 +3,24 @@ import sqlite3
 from data.models.palm import Palm
 
 queries = {
-    "get_all": """
-SELECT *
+    "get_count": """
+SELECT COUNT(*) as count
 FROM Palm
+    """,
+    "get_all": """
+SELECT Palm.*
+    ,Zone.Name as ZoneName
+FROM Palm
+LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
 ORDER BY Genus, Species, Variety
+LIMIT ? OFFSET ?
     """,
     "get_one": """
-SELECT *
+SELECT Palm.*
+    ,Zone.Name as ZoneName
 FROM Palm
 WHERE Id = ?
+LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
     """,
     "drop": """
 DROP TABLE IF EXISTS "Palm"
@@ -43,6 +52,8 @@ def read_from_row(row:sqlite3.Row) -> Palm:
     palm.zone_id = row["ZoneId"]
     palm.last_modified = row["LastModified"]
     palm.who_modified = row["WhoModified"]
+    if hasattr(palm, 'zone_name') and 'ZoneName' in row.keys():
+        palm.zone_name = row["ZoneName"]
     return palm
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Palm]:

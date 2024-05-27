@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+{% block title %}Palm Index{% endblock %}
+{% block header %}
+<section class="hero is-primary">
+    <div class="hero-body">
+        <p class="title">Palm Index</p>
+        <p class="subtitle">Primary subtitle</p>
+    </div>
+</section>
+{% endblock %}
+{% block content %}
+
+{%if data %}
+<!-- <code>
+'page': {{data.page}}<br />
+'results_per_page': {{data.results_per_page}}<br />
+'results_on_this_page': {{data.results_on_this_page}}<br />
+'total_results': {{data.total_results}}<br />
+'total_pages': {{data.total_pages}}<br />
+</code> -->
+
+<div class="table-container mb-0">
+    <table class="table is-striped is-fullwidth">
+        <thead>
+            <tr class="is-primary">
+                <th>Genus</th>
+                <th>Species</th>
+                <th>Variety</th>
+                <th>Common Name</th>
+                <th>Zone</th>
+                <!-- <th>Code</th> -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in data.results %}
+            <tr>
+                <td>{{p['genus']}}</td>
+                <td>{{p['species']}}</td>
+                <td>{{p['variety']}}</td>
+                <td>{{p['common_name']}}</td>
+                <td>
+                    <div class="dropdown is-hoverable is-right">
+                        <div class="dropdown-trigger" aria-haspopup="true" aria-controls="dropdown-zone-{{p.id}}">
+                            {{p['zone_name']}}
+                        </div>
+                        <div class="dropdown-menu" id="dropdown-zone-{{p.id}}" role="menu">
+                            <div class="dropdown-content">
+                                <div class="dropdown-item">
+                                    ## - ## °F<br />
+                                    ## - ## °C<br />
+                                    <a href="https://planthardiness.ars.usda.gov">USDA Zone Map</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <!-- <td>{{p}}</td> -->
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<p class="my-0">Page {{data.page}} of {{data.total_pages}}. Showing {{data.results_on_this_page}} of
+    {{data.total_results}} results.</p>
+<nav class="pagination" role="navigation" aria-label="pagination">
+    {% if data.previous_page is not none %}
+    <a href="{{data.previous_page_url}}" class="pagination-previous">Previous</a>
+    {% endif %}
+    {% if data.next_page is not none %}
+    <a href="{{data.next_page_url}}" class="pagination-next">Next page</a>
+    {% endif %}
+
+    <ul class="pagination-list">
+        <li>
+            <input type="input" type="text" class="input" value="{{data.page}}" size="3" id="gotopage-input" />
+        </li>
+        <li>
+            <a href="#" class="pagination-link" aria-label="Go to page" id="gotopage-btn"
+                data-totalpages="{{data.total_pages}}" data-baseurl="{{url_for('web.index')}}"
+                data-resultsperpage="{{data.results_per_page}}">Go</a>
+        </li>
+    </ul>
+</nav>
+<script>
+    document.getElementById('gotopage-btn').addEventListener('click', function (e) {
+        e.preventDefault();
+        console.log('base_url', this.dataset.baseurl);
+        console.log('total_pages', this.dataset.totalpages);
+        console.log('results_per_page', this.dataset.resultsperpage);
+
+        let selectedPage = document.getElementById('gotopage-input').value;
+        if (isNaN(selectedPage)) {
+            selectedPage = 1;
+        }
+        else if (selectedPage < 1) {
+            selectedPage = 1;
+        } else if (selectedPage > this.dataset.totalpages) {
+            selectedPage = this.dataset.totalpages;
+        }
+        console.log('page', selectedPage);
+
+        window.location.href = this.dataset.baseurl + '?page=' + selectedPage + '&results_per_page=' + this.dataset.resultsperpage;
+    });
+</script>
+
+{% else %}
+<div>No data available</div>
+{% endif %}
+{% endblock %}
+
+{% block pagination %}
+{% endblock %}

@@ -25,6 +25,7 @@ class PalmSerializer(JSONEncoder):
                 "variety": o.variety,
                 "common_name": o.common_name,
                 "zone_id": o.zone_id,
+                "zone_name": o.zone_name,
                 "last_modified": o.last_modified,
                 "who_modified": o.who_modified,
             }
