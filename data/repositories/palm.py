@@ -7,11 +7,31 @@ queries = {
 SELECT COUNT(*) as count
 FROM Palm
     """,
+    "search_count": """
+SELECT COUNT(*) as count
+FROM Palm
+WHERE Genus LIKE ? OR Species LIKE ? OR Variety LIKE ? OR CommonName LIKE ?
+    """,
     "get_all": """
 SELECT Palm.*
     ,Zone.Name as ZoneName
+    ,COUNT(PalmObservation.Id) as ObservationCount
 FROM Palm
 LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
+LEFT JOIN PalmObservation ON Palm.Id = PalmObservation.PalmId
+GROUP BY Palm.Id
+ORDER BY Genus, Species, Variety
+LIMIT ? OFFSET ?
+    """,
+    "search_all": """
+SELECT Palm.*
+    ,Zone.Name as ZoneName
+    ,COUNT(PalmObservation.Id) as ObservationCount
+FROM Palm
+LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
+LEFT JOIN PalmObservation ON Palm.Id = PalmObservation.PalmId
+WHERE Genus LIKE ? OR Species LIKE ? OR Variety LIKE ? OR CommonName LIKE ?
+GROUP BY Palm.Id
 ORDER BY Genus, Species, Variety
 LIMIT ? OFFSET ?
     """,
@@ -38,7 +58,18 @@ CREATE TABLE IF NOT EXISTS "Palm" (
   "WhoModified" varchar(128) NOT NULL,
   FOREIGN KEY (ZoneId) REFERENCES "Zone" (Id)
 );
-    """
+    """,
+    "get_all_with_palmobservation_count": """
+SELECT Palm.*
+    ,Zone.Name as ZoneName
+    ,COUNT(PalmObservation.Id) as ObservationCount
+FROM Palm
+LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
+LEFT JOIN PalmObservation ON Palm.Id = PalmObservation.PalmId
+GROUP BY Palm.Id
+ORDER BY Genus, Species, Variety
+LIMIT ? OFFSET ?
+    """,
 }
 
 def read_from_row(row:sqlite3.Row) -> Palm:
@@ -54,6 +85,8 @@ def read_from_row(row:sqlite3.Row) -> Palm:
     palm.who_modified = row["WhoModified"]
     if hasattr(palm, 'zone_name') and 'ZoneName' in row.keys():
         palm.zone_name = row["ZoneName"]
+    if hasattr(palm, 'observation_count') and 'ObservationCount' in row.keys():
+        palm.observation_count = row["ObservationCount"]
     return palm
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Palm]:
@@ -62,15 +95,15 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
     wb = openpyxl.load_workbook(workbook)
     ws = wb[sheet]
 
-    for row_cells in ws.iter_rows(min_row=first_row_with_data, values_only=True):
+    for row in ws.iter_rows(min_row=first_row_with_data, values_only=True):
         palm = Palm()
         palm.id = None
-        palm.legacy_id = row_cells[0]
-        palm.genus = row_cells[1]
-        palm.species = row_cells[2]
-        palm.variety = row_cells[3]
-        palm.common_name = row_cells[4]
-        palm.zone_name = row_cells[5]
+        palm.legacy_id = row[0]
+        palm.genus = row[1]
+        palm.species = row[2]
+        palm.variety = row[3]
+        palm.common_name = row[4]
+        palm.zone_name = row[5]
         palm.zone_id = -1
         palms.append(palm)
 

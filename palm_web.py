@@ -12,12 +12,9 @@ web = Blueprint('web', __name__)
 @web.route('/', methods=['GET'])
 def index():
     page = request.args.get('page',1, type=int)
-    results_per_page = request.args.get('results_per_page', 50, type=int)
-
-    #request_url = url_for(palm_api.get_all, offset=page*results_per_page, num_results=results_per_page)
-    #response = requests.get(request_url)
-    
-    api_response = requests.get('http://127.0.0.1:5000/api/palm', params={'offset': page*results_per_page, 'num_results': results_per_page})
+    results_per_page = request.args.get('results_per_page', 25, type=int)
+    search_term = request.args.get('search', None, type=str)
+    api_response = requests.get('http://127.0.0.1:5000/api/palm', params={'offset': page*results_per_page, 'num_results': results_per_page, 'search': search_term})
     api_json = api_response.json()
 
     total_pages = math.ceil(api_json['meta']['total_results'] / results_per_page)
@@ -38,7 +35,8 @@ def index():
         'total_pages': total_pages,
         'next_page_url': next_page_url,
         'previous_page_url': previous_page_url,
-        'results': api_json['records']
+        'results': api_json['records'],
+        'search': search_term,
     }
     return render_template('palm_index.html', data=data)
 

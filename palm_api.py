@@ -11,8 +11,18 @@ api = Blueprint('api', __name__)
 def get_all():
     offset = request.args.get('offset', 0, type=int)
     num_results = request.args.get('num_results', 25, type=int)
-    total_records = query_db(palm.queries['get_count'], one=True)[0]
-    records = query_db(palm.queries['get_all'], (num_results, offset))
+    search_term = request.args.get('search', None, type=str)
+
+    total_records = 0
+    records = 0
+    if search_term is None or search_term == '':
+        # a 'normal' search
+        total_records = query_db(palm.queries['get_count'], one=True)[0]
+        records = query_db(palm.queries['get_all'], (num_results, offset))
+    else:
+        total_records = query_db(palm.queries['search_count'], (f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',), one=True)[0]
+        records = query_db(palm.queries['search_all'], (f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',f'%{search_term}%', num_results, offset))
+
     
     # convert records to objects so that they can be serialized to json
     objects:list[Palm] = [palm.read_from_row(row) for row in records]

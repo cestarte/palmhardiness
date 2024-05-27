@@ -11,15 +11,8 @@
 {% block content %}
 
 {%if data %}
-<!-- <code>
-'page': {{data.page}}<br />
-'results_per_page': {{data.results_per_page}}<br />
-'results_on_this_page': {{data.results_on_this_page}}<br />
-'total_results': {{data.total_results}}<br />
-'total_pages': {{data.total_pages}}<br />
-</code> -->
-
 <div class="table-container mb-0">
+    <input type="text" class="input" placeholder="Search..." id="search-input" value="{{data.search}}" />
     <table class="table is-striped is-fullwidth">
         <thead>
             <tr class="is-primary">
@@ -28,6 +21,7 @@
                 <th>Variety</th>
                 <th>Common Name</th>
                 <th>Zone</th>
+                <th>Observations</th>
                 <!-- <th>Code</th> -->
             </tr>
         </thead>
@@ -54,6 +48,7 @@
                         </div>
                     </div>
                 </td>
+                <td><a href="#">{{p['observation_count']}}</a></td>
                 <!-- <td>{{p}}</td> -->
             </tr>
             {% endfor %}
@@ -84,9 +79,6 @@
 <script>
     document.getElementById('gotopage-btn').addEventListener('click', function (e) {
         e.preventDefault();
-        console.log('base_url', this.dataset.baseurl);
-        console.log('total_pages', this.dataset.totalpages);
-        console.log('results_per_page', this.dataset.resultsperpage);
 
         let selectedPage = document.getElementById('gotopage-input').value;
         if (isNaN(selectedPage)) {
@@ -97,14 +89,22 @@
         } else if (selectedPage > this.dataset.totalpages) {
             selectedPage = this.dataset.totalpages;
         }
-        console.log('page', selectedPage);
 
         window.location.href = this.dataset.baseurl + '?page=' + selectedPage + '&results_per_page=' + this.dataset.resultsperpage;
+    });
+
+    document.getElementById('search-input').addEventListener('input', function (e) {
+        let search = this.value;
+        let url = window.location.href.split('?')[0];
+        if (search) {
+            url += '?search=' + search;
+        }
+        window.location.href = url;
     });
 </script>
 
 {% else %}
-<div>No data available</div>
+<div><em>No data available.</em></div>
 {% endif %}
 {% endblock %}
 
