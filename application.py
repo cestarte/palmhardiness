@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from flask import Flask, request, jsonify, make_response, render_template, g
+from flask_cors import CORS
 import sqlite3
 from werkzeug.exceptions import HTTPException
 import json
@@ -9,6 +10,7 @@ import palm_web
 import sys
 
 app = Flask(__name__)
+CORS(app)
 app.config['Database'] = './palmhardiness.db'
 
 #app.register_blueprint(event, __name__)
@@ -91,7 +93,7 @@ SELECT * FROM (
     #return jsonify({'page_num': page_num})
 
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
     cur = get_db().cursor()
     cur.execute("""

@@ -10,10 +10,79 @@
 {% endblock %}
 {% block content %}
 
+<div id="filters" class="mb-0">
+    <form action="{{url_for('web.index')}}" method="get">
+        <div class="field is-grouped">
+            <div class="control">
+                <label for="search" class="label">Search</label>
+                <input type="text" class="input" name="search" id="search" value="{{data.search}}" />
+            </div>
+            <div class="control">
+                <label for="zone" class="label">Zone</label>
+                <div class="select">
+                    <select name="zone" id="zone">
+                        <option value="">All</option>
+                        {% for z in data.zones %}
+                        <option value="{{z.id}}" {% if data.zone==z.id %}selected{% endif %}>{{z.name}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="control">
+                <label for="results_per_page" class="label">Results per page</label>
+                <div class="select">
+                    <select name="results_per_page" id="results_per_page">
+                        <option value="10" {% if data.results_per_page==10 %}selected{% endif %}>10</option>
+                        <option value="25" {% if data.results_per_page==25 %}selected{% endif %}>25</option>
+                        <option value="50" {% if data.results_per_page==50 %}selected{% endif %}>50</option>
+                        <option value="100" {% if data.results_per_page==100 %}selected{% endif %}>100</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control">
+                <label for="sort" class="label">Sort</label>
+                <div class="select">
+                    <select name="sort" id="sort">
+                        <option value="genus" {% if data.sort=='genus' %}selected{% endif %}>Genus</option>
+                        <option value="species" {% if data.sort=='species' %}selected{% endif %}>Species</option>
+                        <option value="variety" {% if data.sort=='variety' %}selected{% endif %}>Variety</option>
+                        <option value="common_name" {% if data.sort=='common_name' %}selected {% endif %}>Common Name
+                        </option>
+                        <option value="zone" {% if data.sort=='zone' %}selected{% endif %}>Zone</option>
+                        <option value="observation_count" {% if data.sort=='observation_count' %}selected {% endif %}>
+                            Observations</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control">
+                <label for="order" class="label">Order</label>
+                <div class="select">
+                    <select name="order" id="order">
+                        <option value="asc" {% if data.order=='asc' %}selected{% endif %}>Ascending</option>
+                        <option value="desc" {% if data.order=='desc' %}selected{% endif %}>Descending</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control">
+                <button type="submit" class="button is-primary">Filter</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
 {%if data %}
 <div class="table-container mb-0">
-    <input type="text" class="input" placeholder="Search..." id="search-input" value="{{data.search}}" />
-    <table class="table is-striped is-fullwidth">
+    <div class="grid">
+        <div class="cell">
+        </div>
+        <div class="cell">
+        </div>
+        <div class="cell">
+            <input type="text" class="input" placeholder="Search..." id="search-input" value="{{data.search}}" />
+        </div>
+    </div>
+    <table class="table is-striped is-fullwidth" data-id="palm-table">
         <thead>
             <tr class="is-primary">
                 <th>Genus</th>
@@ -55,52 +124,117 @@
         </tbody>
     </table>
 </div>
-<p class="my-0">Page {{data.page}} of {{data.total_pages}}. Showing {{data.results_on_this_page}} of
-    {{data.total_results}} results.</p>
-<nav class="pagination" role="navigation" aria-label="pagination">
-    {% if data.previous_page is not none %}
-    <a href="{{data.previous_page_url}}" class="pagination-previous">Previous</a>
-    {% endif %}
-    {% if data.next_page is not none %}
-    <a href="{{data.next_page_url}}" class="pagination-next">Next page</a>
-    {% endif %}
+<template id="table-pagination">
+    <p class="my-0">
+        Page <span name="current-page"></span> of <span name="total_pages"></span>.
+        Showing <span name="results_on_this_page"></span> of <span name="total_results"></span> results.
+    </p>
+    <nav class="pagination" role="navigation" aria-label="pagination">
+        <a href="#" class="pagination-previous">Previous</a>
+        <a href="#" class="pagination-next">Next page</a>
 
-    <ul class="pagination-list">
-        <li>
-            <input type="input" type="text" class="input" value="{{data.page}}" size="3" id="gotopage-input" />
-        </li>
-        <li>
-            <a href="#" class="pagination-link" aria-label="Go to page" id="gotopage-btn"
-                data-totalpages="{{data.total_pages}}" data-baseurl="{{url_for('web.index')}}"
-                data-resultsperpage="{{data.results_per_page}}">Go</a>
-        </li>
-    </ul>
-</nav>
+        <ul class="pagination-list">
+            <li>
+                <input type="input" type="text" class="input" value="" name="current-page" size="3" />
+            </li>
+            <li>
+                <a href="#" class="pagination-link" aria-label="Go to page">Go</a>
+            </li>
+        </ul>
+</template>
 <script>
-    document.getElementById('gotopage-btn').addEventListener('click', function (e) {
-        e.preventDefault();
-
-        let selectedPage = document.getElementById('gotopage-input').value;
-        if (isNaN(selectedPage)) {
-            selectedPage = 1;
-        }
-        else if (selectedPage < 1) {
-            selectedPage = 1;
-        } else if (selectedPage > this.dataset.totalpages) {
-            selectedPage = this.dataset.totalpages;
-        }
-
-        window.location.href = this.dataset.baseurl + '?page=' + selectedPage + '&results_per_page=' + this.dataset.resultsperpage;
-    });
-
     document.getElementById('search-input').addEventListener('input', function (e) {
-        let search = this.value;
-        let url = window.location.href.split('?')[0];
-        if (search) {
-            url += '?search=' + search;
-        }
-        window.location.href = url;
+        processSearch(this.value)
     });
+
+    function performSearch(term) {
+        let url = 'http://localhost:5000/api/palm'
+        if (term) {
+            url += '?search=' + term;
+        }
+        getApiData(url).then(data => {
+            console.log('search results', data);
+            buildTableBody(data);
+            // overwrite the page result count
+            //let pageResultCount = document.querySelector('[data-id="palm-table-page-result-count"]');
+            //pageResultCount.innerText = `Page ${data.page} of ${data.total_pages}. Showing ${data.results_on_this_page} of ${data.total_results} results.`;
+            buildTablePagination('palm-table', data);
+        }).catch(error => {
+            console.error(error);
+        });
+    }
+
+    function buildTableBody(data) {
+        let table = document.querySelector('[data-id="palm-table"]');
+        let tbody = table.querySelector('tbody');
+        tbody.innerHTML = '';
+        data.records.forEach(p => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${p['genus']}</td>
+                <td>${p['species']}</td>
+                <td>${p['variety']}</td>
+                <td>${p['common_name']}</td>
+                <td>${p['zone_name']}</td>
+                <td><a href="#">${p['observation_count']}</a></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function buildTablePagination(tableDataId, data) {
+        const template = document.querySelector('#table-pagination')
+        let clone = template.content.cloneNode(true);
+        let current_page = clone.querySelector('[name="current-page"]');
+        let totalPages = clone.querySelector('[name="total_pages"]');
+        let resultsOnThisPage = clone.querySelector('[name="results_on_this_page"]');
+        let totalResults = clone.querySelector('[name="total_results"]');
+
+        current_page.innerText = data.meta.page;
+        totalPages.innerText = data.meta.total_pages;
+        resultsOnThisPage.innerText = data.meta.results_on_this_page;
+        totalResults.innerText = data.meta.total_results;
+
+        current_page.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            let selectedPage = parseInt(this.value);
+            if (isNaN(selectedPage)) {
+                selectedPage = 1;
+            }
+            else if (selectedPage < 1) {
+                selectedPage = 1;
+            } else if (selectedPage > this.dataset.totalpages) {
+                selectedPage = this.dataset.totalpages;
+            }
+        });
+
+        let table = document.querySelector('[data-id="' + tableDataId + '"]');
+        //table.insertAdjacentElement('afterend', clone.innerHTML);
+        // insert clone after table
+        //table.parentNode.insertBefore(clone, table.nextSibling);
+        // if the table is in a container element, insert clone after the container
+        table.parentNode.parentNode.insertBefore(clone, table.parentNode.nextSibling);
+
+    }
+
+    async function getApiData(url) {
+        let response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        let data = await response.json();
+        return data;
+    }
+
+    function debounce(func, timeout = 510) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+        };
+    }
+    const processSearch = debounce((term) => performSearch(term));
 </script>
 
 {% else %}

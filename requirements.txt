@@ -2,3 +2,4 @@ openpyxl
 argparse
 Flask
 requests
+flask-cors

@@ -1,4 +1,4 @@
-# PalmTalk Hardiness Sqlite Importer
+# Palm Hardiness Sqlite Importer
 
 > Massive thanks to kinzyjr who painstakingly collected palm 
 > hardiness data spread across the PalmTalk forum and other 
@@ -53,3 +53,7 @@ if already existing.
 
 The `--excel` argumnent is where you specify the path to the 
 cold hardiness data set.
+
+### Launch the web app
+`python application.py`
+

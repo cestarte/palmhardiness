@@ -4,19 +4,75 @@ from data.models.palm import Palm, PalmSerializer
 from data.repositories import palm
 import json
 import sys
+import math
 
 api = Blueprint('api', __name__)
 
 @api.route('/', methods=['GET'])
 def get_all():
+    page = request.args.get('page', 1, type=int)
+    results_per_page = request.args.get('results_per_page', 25, type=int)
+    search_term = request.args.get('search', None, type=str)
+
+    # sanity check the inputs
+    if page < 1:
+        page = 1
+    if results_per_page < 1:
+        results_per_page = 25
+    if results_per_page > 100:
+        results_per_page = 100
+
+    total_pages = 0
+    total_records = 0
+    records = 0
+    record_offset = (page-1) * results_per_page
+    if search_term is None or search_term == '':
+        # no term provided, get all records
+        total_records = query_db(palm.queries['get_count'], one=True)[0]
+        records = query_db(palm.queries['get_all'], (results_per_page, record_offset))
+    else:
+        total_records = query_db(palm.queries['search_count'], (f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',), one=True)[0]
+        records = query_db(palm.queries['search_all'], (f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',f'%{search_term}%', results_per_page, record_offset))
+
+    total_pages = math.ceil(total_records / results_per_page)
+    has_previous_page = False
+    if page > 1:
+        has_previous_page = True
+    has_next_page = False
+    if total_pages > page:
+        has_next_page = True
+    
+    # convert records to objects so that they can be serialized to json
+    objects:list[Palm] = [palm.read_from_row(row) for row in records]
+    objects_json_string = json.dumps(objects, cls=PalmSerializer)
+    # convert string to json object so it can be returned in the response
+    objects_json = json.loads(objects_json_string)
+
+    return {
+        'records': objects_json, 
+        'meta': {
+            'offset': record_offset, 
+            'num_results': len(objects), 
+            'total_results': total_records,
+            'total_pages': total_pages,
+            'has_previous_page': has_previous_page,
+            'has_next_page': has_next_page,
+            'page': page,
+            'results_per_page': results_per_page,
+            'search': search_term,
+        }
+    }
+
+@api.route('/old', methods=['GET'])
+def get_all_old():
     offset = request.args.get('offset', 0, type=int)
     num_results = request.args.get('num_results', 25, type=int)
     search_term = request.args.get('search', None, type=str)
-
     total_records = 0
     records = 0
+
     if search_term is None or search_term == '':
-        # a 'normal' search
+        # no term provided, get all records
         total_records = query_db(palm.queries['get_count'], one=True)[0]
         records = query_db(palm.queries['get_all'], (num_results, offset))
     else:
@@ -34,7 +90,6 @@ def get_all():
         'records': objects_json, 
         'meta': {'offset': offset, 'num_results': len(objects), 'total_results': total_records}
     }
-    #return json.dumps(objs, cls=PalmSerializer)
 
 @api.route('/<int:palm_id>', methods=['GET'])
 def palm_by_id(palm_id):
