@@ -36,9 +36,11 @@ def get_all():
 
     total_pages = math.ceil(total_records / results_per_page)
     has_previous_page = False
+    has_next_page = False
+    if total_pages == 0:
+        page = 0
     if page > 1:
         has_previous_page = True
-    has_next_page = False
     if total_pages > page:
         has_next_page = True
     
@@ -52,7 +54,7 @@ def get_all():
         'records': objects_json, 
         'meta': {
             'offset': record_offset, 
-            'num_results': len(objects), 
+            'results_on_this_page': len(objects), 
             'total_results': total_records,
             'total_pages': total_pages,
             'has_previous_page': has_previous_page,

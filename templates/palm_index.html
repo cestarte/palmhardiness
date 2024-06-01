@@ -4,7 +4,7 @@
 <section class="hero is-primary">
     <div class="hero-body">
         <p class="title">Palm Index</p>
-        <p class="subtitle">Primary subtitle</p>
+        <p class="subtitle"></p>
     </div>
 </section>
 {% endblock %}
@@ -71,7 +71,6 @@
 </div>
 
 
-{%if data %}
 <div class="table-container mb-0">
     <div class="grid">
         <div class="cell">
@@ -82,7 +81,7 @@
             <input type="text" class="input" placeholder="Search..." id="search-input" value="{{data.search}}" />
         </div>
     </div>
-    <table class="table is-striped is-fullwidth" data-id="palm-table">
+    <table class="table is-striped is-fullwidth" id="palm-table">
         <thead>
             <tr class="is-primary">
                 <th>Genus</th>
@@ -91,39 +90,15 @@
                 <th>Common Name</th>
                 <th>Zone</th>
                 <th>Observations</th>
-                <!-- <th>Code</th> -->
             </tr>
         </thead>
         <tbody>
-            {% for p in data.results %}
-            <tr>
-                <td>{{p['genus']}}</td>
-                <td>{{p['species']}}</td>
-                <td>{{p['variety']}}</td>
-                <td>{{p['common_name']}}</td>
-                <td>
-                    <div class="dropdown is-hoverable is-right">
-                        <div class="dropdown-trigger" aria-haspopup="true" aria-controls="dropdown-zone-{{p.id}}">
-                            {{p['zone_name']}}
-                        </div>
-                        <div class="dropdown-menu" id="dropdown-zone-{{p.id}}" role="menu">
-                            <div class="dropdown-content">
-                                <div class="dropdown-item">
-                                    ## - ## °F<br />
-                                    ## - ## °C<br />
-                                    <a href="https://planthardiness.ars.usda.gov">USDA Zone Map</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-                <td><a href="#">{{p['observation_count']}}</a></td>
-                <!-- <td>{{p}}</td> -->
-            </tr>
-            {% endfor %}
         </tbody>
     </table>
 </div>
+<div data-id="pagination-placeholder"></div>
+
+
 <template id="table-pagination">
     <p class="my-0">
         Page <span name="current-page"></span> of <span name="total_pages"></span>.
@@ -135,37 +110,47 @@
 
         <ul class="pagination-list">
             <li>
-                <input type="input" type="text" class="input" value="" name="current-page" size="3" />
+                <input type="input" type="number" class="input" value="" name="page-input" size="3" />
             </li>
             <li>
-                <a href="#" class="pagination-link" aria-label="Go to page">Go</a>
+                <a href="#" class="pagination-link" name="go" aria-label="Go to page">Go</a>
             </li>
         </ul>
 </template>
-<script>
-    document.getElementById('search-input').addEventListener('input', function (e) {
-        processSearch(this.value)
-    });
 
-    function performSearch(term) {
-        let url = 'http://localhost:5000/api/palm'
-        if (term) {
-            url += '?search=' + term;
+
+<script>
+    window.onload = function () {
+        document.getElementById('search-input').addEventListener('input', function (e) {
+            processSearch(this.value)
+        });
+
+        // initial table population
+        refreshTable();
+    }
+
+
+    function refreshTable(term, meta) {
+        let url = 'http://localhost:5000/api/palm?search='
+        if (term)
+            url += term;
+        if (meta) {
+            for (let key in meta) {
+                url += '&' + key + '=' + meta[key];
+            }
         }
+
         getApiData(url).then(data => {
-            console.log('search results', data);
-            buildTableBody(data);
-            // overwrite the page result count
-            //let pageResultCount = document.querySelector('[data-id="palm-table-page-result-count"]');
-            //pageResultCount.innerText = `Page ${data.page} of ${data.total_pages}. Showing ${data.results_on_this_page} of ${data.total_results} results.`;
+            console.log('api results', data);
+            buildTableBody('palm-table', data);
             buildTablePagination('palm-table', data);
         }).catch(error => {
             console.error(error);
         });
     }
 
-    function buildTableBody(data) {
-        let table = document.querySelector('[data-id="palm-table"]');
+    function buildTableBody(tableId, data) {
+        let table = document.querySelector('#' + tableId);
         let tbody = table.querySelector('tbody');
         tbody.innerHTML = '';
         data.records.forEach(p => {
@@ -180,42 +165,76 @@
             `;
             tbody.appendChild(tr);
         });
+        if (data.records.length == 0) {
+            let tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="6"><em>No data available.</em></td>';
+            tbody.appendChild(tr);
+        }
     }
 
     function buildTablePagination(tableDataId, data) {
+        const placeholderElem = document.querySelector('[data-id="pagination-placeholder"]');
         const template = document.querySelector('#table-pagination')
         let clone = template.content.cloneNode(true);
-        let current_page = clone.querySelector('[name="current-page"]');
-        let totalPages = clone.querySelector('[name="total_pages"]');
-        let resultsOnThisPage = clone.querySelector('[name="results_on_this_page"]');
-        let totalResults = clone.querySelector('[name="total_results"]');
+        let currentPageElem = clone.querySelector('[name="current-page"]');
+        let pageInputElem = clone.querySelector('[name="page-input"]');
+        let pageInputGoElem = clone.querySelector('[name="go"]');
+        let totalPagesElem = clone.querySelector('[name="total_pages"]');
+        let resultsOnThisPageElem = clone.querySelector('[name="results_on_this_page"]');
+        let totalResultsElem = clone.querySelector('[name="total_results"]');
+        let nextPageElem = clone.querySelector('.pagination-next');
+        let prevPageElem = clone.querySelector('.pagination-previous');
 
-        current_page.innerText = data.meta.page;
-        totalPages.innerText = data.meta.total_pages;
-        resultsOnThisPage.innerText = data.meta.results_on_this_page;
-        totalResults.innerText = data.meta.total_results;
+        currentPageElem.innerText = data.meta.page;
+        pageInputElem.value = data.meta.page;
+        totalPagesElem.innerText = data.meta.total_pages;
+        resultsOnThisPageElem.innerText = data.meta.results_on_this_page;
+        totalResultsElem.innerText = data.meta.total_results;
 
-        current_page.addEventListener('click', function (e) {
-            e.preventDefault();
+        // If only 1 page, disable the prev button
+        if (data.meta.page <= 1) {
+            prevPageElem.setAttribute('disabled', '');
+        } else {
+            // ... otherwise, wire up the prev button
+            prevPageElem.addEventListener('click', function (e) {
+                e.preventDefault();
+                refreshTable(data.meta.search, { 'page': data.meta.page - 1, 'results_per_page': data.meta.results_per_page });
+            });
+        }
 
-            let selectedPage = parseInt(this.value);
-            if (isNaN(selectedPage)) {
-                selectedPage = 1;
-            }
-            else if (selectedPage < 1) {
-                selectedPage = 1;
-            } else if (selectedPage > this.dataset.totalpages) {
-                selectedPage = this.dataset.totalpages;
-            }
-        });
+        // If at the last page, disable the next button
+        if (data.meta.page == data.meta.total_pages) {
+            nextPageElem.setAttribute('disabled', '');
+        } else {
+            // ...otherwise, wire up the next button
+            nextPageElem.addEventListener('click', function (e) {
+                e.preventDefault();
+                refreshTable(data.meta.search, { 'page': data.meta.page + 1, 'results_per_page': data.meta.results_per_page });
+            });
+        }
+
+        // If only 1 page, disable the input 
+        if (data.meta.total_pages <= 1) {
+            pageInputElem.setAttribute('disabled', '');
+            pageInputGoElem.setAttribute('disabled', '');
+        } else {
+            // ...otherwise, wire up the go button
+            pageInputGoElem.addEventListener('click', function (e) {
+                e.preventDefault();
+                let page = parseInt(pageInputElem.value);
+                if (page > 0 && page <= data.meta.total_pages) {
+                    refreshTable(data.meta.search, { 'page': page, 'results_per_page': data.meta.results_per_page });
+                }
+            });
+        }
+
 
         let table = document.querySelector('[data-id="' + tableDataId + '"]');
-        //table.insertAdjacentElement('afterend', clone.innerHTML);
-        // insert clone after table
-        //table.parentNode.insertBefore(clone, table.nextSibling);
-        // if the table is in a container element, insert clone after the container
-        table.parentNode.parentNode.insertBefore(clone, table.parentNode.nextSibling);
 
+        // insert the pagination after the table (or table-container element) 
+        //table.parentNode.parentNode.insertBefore(clone, table.parentNode.nextSibling);
+        placeholderElem.innerHTML = '';
+        placeholderElem.appendChild(clone);
     }
 
     async function getApiData(url) {
@@ -234,13 +253,7 @@
             timer = setTimeout(() => { func.apply(this, args); }, timeout);
         };
     }
-    const processSearch = debounce((term) => performSearch(term));
+    const processSearch = debounce((term) => refreshTable(term));
 </script>
 
-{% else %}
-<div><em>No data available.</em></div>
-{% endif %}
-{% endblock %}
-
-{% block pagination %}
 {% endblock %}
