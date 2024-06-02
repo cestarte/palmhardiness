@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS "PalmObservation" (
     FOREIGN KEY (DamageId) REFERENCES "Damage" (Id),
     FOREIGN KEY (EventId) REFERENCES "Event" (Id)
 );
-    """
+    """,
 }
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> list[PalmObservation]:

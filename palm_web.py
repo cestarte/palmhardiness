@@ -4,7 +4,7 @@ import json
 import sys
 import math
 from data.models.palm import Palm, PalmSerializer
-from data.repositories import palm
+from data.repositories import palmrepo as palm
 import palm_api as papi
 
 web = Blueprint('web', __name__)

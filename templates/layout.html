@@ -4,7 +4,11 @@
 <head>
     {% block head %}
     <title>{% block title %}{% endblock %} - PCH</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bulma.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome6/css/fontawesome.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome6/css/brands.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome6/css/solid.min.css') }}">
+
     {% endblock %}
 </head>
 
@@ -26,12 +30,13 @@
     <div id="footer" class="footer">
         {% block footer %}
         <div class="content has-text-centered">
-            <p>Data and web content are made freely available for public use. There is no warranty of any kind. Use it
-                at your own risk.</p>
-            <p>No affiliation with <a href="http://www.palmtalk.com">Palm Talk</a> or any other data sources used.</p>
+            <p>Data and web content are made freely available for public use. There is no warranty of any kind. Use
+                this website and the information contained here at your own risk.</p>
             <p>Thanks to <a href="https://www.palmtalk.org/forum/profile/5832-kinzyjr/">kinzyjr</a> for the <a
                     href="https://www.palmtalk.org/forum/topic/61358-0000-cold-hardiness-observation-master-data/">cold
                     hardiness master data</a>.
+                <br />No affiliation with <a href="http://www.palmtalk.com">Palm Talk</a> or any other data sources
+                used.
             </p>
         </div>
         {% endblock %}

@@ -1,24 +1,24 @@
 from flask import Blueprint, g, current_app, request
 import sqlite3
 from data.models.palm import Palm, PalmSerializer
-from data.repositories import palm
+from data.repositories import palmrepo as palm
 import json
 import sys
 import math
 
-api = Blueprint('api', __name__)
+api = Blueprint('palm_api', __name__)
 
 @api.route('/', methods=['GET'])
 def get_all():
     page = request.args.get('page', 1, type=int)
-    results_per_page = request.args.get('results_per_page', 25, type=int)
+    results_per_page = request.args.get('results_per_page', 15, type=int)
     search_term = request.args.get('search', None, type=str)
 
     # sanity check the inputs
     if page < 1:
         page = 1
     if results_per_page < 1:
-        results_per_page = 25
+        results_per_page = 15
     if results_per_page > 100:
         results_per_page = 100
 

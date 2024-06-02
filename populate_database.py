@@ -1,13 +1,13 @@
 import argparse
-from data.repositories import zone
-from data.repositories import damage
-from data.repositories import synonym
-from data.repositories import event
-from data.repositories import palm
-from data.repositories import palmsynonym
-from data.repositories import palmobservation
-from data.repositories import cycad
-from data.repositories import cycadobservation
+from data.repositories import zonerepo
+from data.repositories import damagerepo
+from data.repositories import synonymrepo
+from data.repositories import eventrepo
+from data.repositories import palmrepo
+from data.repositories import palmsynonymrepo
+from data.repositories import palmobservationrepo
+from data.repositories import cycadrepo
+from data.repositories import cycadobservationrepo
 
 
 def main():
@@ -33,33 +33,33 @@ def main():
     if args.path:
         database_path = args.path
     
-    zones = zone.read_from_excel(excel_path, "Zones_tbl")
-    zone.write_to_database(database_path, zones)
+    zones = zonerepo.read_from_excel(excel_path, "Zones_tbl")
+    zonerepo.write_to_database(database_path, zones)
 
-    damages = damage.read_from_excel(excel_path, "Damage_tbl")
-    damage.write_to_database(database_path, damages)
+    damages = damagerepo.read_from_excel(excel_path, "Damage_tbl")
+    damagerepo.write_to_database(database_path, damages)
 
-    synonyms = synonym.read_from_excel(excel_path, "Synonyms_tbl")
-    synonym.write_to_database(database_path, synonyms)
+    synonyms = synonymrepo.read_from_excel(excel_path, "Synonyms_tbl")
+    synonymrepo.write_to_database(database_path, synonyms)
 
-    events = event.read_from_excel(excel_path, "Events_tbl", 3)
-    event.write_to_database(database_path, events)
+    events = eventrepo.read_from_excel(excel_path, "Events_tbl", 3)
+    eventrepo.write_to_database(database_path, events)
 
-    palms = palm.read_from_excel(excel_path, "Palms_tbl")
-    palm.write_to_database(database_path, palms)
+    palms = palmrepo.read_from_excel(excel_path, "Palms_tbl")
+    palmrepo.write_to_database(database_path, palms)
 
-    palmsynonym.connect(database_path)
+    palmsynonymrepo.connect(database_path)
 
-    palmobservations = palmobservation.read_from_excel(excel_path, "HardinessPalms_tbl")
-    palmobservations = palmobservation.translate_ids(database_path, palmobservations)
-    palmobservation.write_to_database(database_path, palmobservations)    
+    palmobservations = palmobservationrepo.read_from_excel(excel_path, "HardinessPalms_tbl")
+    palmobservations = palmobservationrepo.translate_ids(database_path, palmobservations)
+    palmobservationrepo.write_to_database(database_path, palmobservations)    
 
-    cycads = cycad.read_from_excel(excel_path, "Cycads_tbl")
-    cycad.write_to_database(database_path, cycads)
+    cycads = cycadrepo.read_from_excel(excel_path, "Cycads_tbl")
+    cycadrepo.write_to_database(database_path, cycads)
 
-    cycadobservations = cycadobservation.read_from_excel(excel_path, "HardinessCycads_tbl")
-    cycadobservations = cycadobservation.translate_ids(database_path, cycadobservations)
-    cycadobservation.write_to_database(database_path, cycadobservations)    
+    cycadobservations = cycadobservationrepo.read_from_excel(excel_path, "HardinessCycads_tbl")
+    cycadobservations = cycadobservationrepo.translate_ids(database_path, cycadobservations)
+    cycadobservationrepo.write_to_database(database_path, cycadobservations)    
 
 if __name__ == "__main__":
     main()

@@ -1,26 +1,26 @@
 import sqlite3
 import argparse
-from data.repositories import zone
-from data.repositories import damage
-from data.repositories import synonym
-from data.repositories import event
-from data.repositories import palm
-from data.repositories import palmsynonym
-from data.repositories import palmobservation
-from data.repositories import cycad
-from data.repositories import cycadobservation
+from data.repositories import zonerepo
+from data.repositories import damagerepo
+from data.repositories import synonymrepo
+from data.repositories import eventrepo
+from data.repositories import palmrepo
+from data.repositories import palmsynonymrepo
+from data.repositories import palmobservationrepo
+from data.repositories import cycadrepo
+from data.repositories import cycadobservationrepo
 
 def drop_tables(database_path):
     drop_queries = [
-        ("Cycad Observation", cycadobservation.queries['drop']),
-        ("Cycad", cycad.queries['drop']),
-        ("Palm Synonym", palmsynonym.queries['drop']),
-        ("PalmObservation", palmobservation.queries['drop']),
-        ("Palm", palm.queries['drop']),
-        ("Damage", damage.queries['drop']),
-        ("Event", event.queries['drop']),
-        ("Synonym", synonym.queries['drop']),
-        ("Zone", zone.queries['drop']),
+        ("Cycad Observation", cycadobservationrepo.queries['drop']),
+        ("Cycad", cycadrepo.queries['drop']),
+        ("Palm Synonym", palmsynonymrepo.queries['drop']),
+        ("PalmObservation", palmobservationrepo.queries['drop']),
+        ("Palm", palmrepo.queries['drop']),
+        ("Damage", damagerepo.queries['drop']),
+        ("Event", eventrepo.queries['drop']),
+        ("Synonym", synonymrepo.queries['drop']),
+        ("Zone", zonerepo.queries['drop']),
     ]
 
     print("Dropping tables...")
@@ -41,15 +41,15 @@ def drop_tables(database_path):
 
 def create_tables(database_path):
     create_queries = [
-        ("Zone", zone.queries['create']),
-        ("Synonym", synonym.queries['create']),
-        ("Event", event.queries['create']),
-        ("Damage", damage.queries['create']),
-        ("Palm", palm.queries['create']),
-        ("PalmObservation", palmobservation.queries['create']),
-        ("Palm Synonym", palmsynonym.queries['create']),
-        ("Cycad", cycad.queries['create']),
-        ("Cycad Observation", cycadobservation.queries['create']),
+        ("Zone", zonerepo.queries['create']),
+        ("Synonym", synonymrepo.queries['create']),
+        ("Event", eventrepo.queries['create']),
+        ("Damage", damagerepo.queries['create']),
+        ("Palm", palmrepo.queries['create']),
+        ("PalmObservation", palmobservationrepo.queries['create']),
+        ("Palm Synonym", palmsynonymrepo.queries['create']),
+        ("Cycad", cycadrepo.queries['create']),
+        ("Cycad Observation", cycadobservationrepo.queries['create']),
     ]
 
     print("Creating tables...")

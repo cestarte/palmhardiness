@@ -27,17 +27,14 @@ class PalmSerializer(JSONEncoder):
                 "zone_id": o.zone_id,
                 "last_modified": o.last_modified,
                 "who_modified": o.who_modified,
-
+                "species": o.species,
+                "variety": o.variety,
+                "common_name": o.common_name,
                 "zone_name": o.zone_name,
                 "observation_count": o.observation_count,
             }
 
-            if o.species is not None:
-                serialized["species"] = o.species
-            if o.variety is not None:
-                serialized["variety"] = o.variety
-            if o.common_name is not None:
-                serialized["common_name"] = o.common_name
+
 
             return serialized
         return super(PalmSerializer, self).default(o)

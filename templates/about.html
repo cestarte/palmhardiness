@@ -1,11 +1,79 @@
 {% extends "layout.html" %}
 {% block title %}About{% endblock %}
+{% block header %}
+<section class="hero is-primary">
+    <div class="hero-body">
+        <p class="title">About</p>
+        <p class="subtitle"></p>
+    </div>
+</section>
+{% endblock %}
 {% block content %}
 
-<h1>About</h1>
-<p>The data was submitted to Palm Talk and other sources by enthusiasts from all over the globe. It was graciously put
-    together by <a href="https://www.palmtalk.org/forum/profile/5832-kinzyjr/">kinzyjr</a>.</p>
-<p>This web app was developed by <a href="https://www.palmtalk.org/forum/profile/23859-5am/">5am</a>.</p>
+<h1 class="is-size-4">Why?</h1>
+<p class="mt-1">
+    Data posted to forums is often lost in the depths of the internet. The goal here is to collect and present it in a
+    more organized manner.
+</p>
+
+<h1 class="is-size-4 mt-2">Who?</h1>
+<p class="mt-1">The data was gathered from various sources by <a
+        href="https://www.palmtalk.org/forum/profile/5832-kinzyjr/">kinzyjr</a> and the web app was developed during
+    spare time by <a href="https://www.palmtalk.org/forum/profile/23859-5am/">5am</a>.
+</p>
+
+
+
+<h1 class="is-size-4 mt-2" id="contribute"> <a href="#contribute"><i class="fa-solid fa-link"></i></a> How can I
+    contribute?</h1>
+<p class="mt-1">The best way to share your own observations is to make a post about them on the <a
+        href="http://palmtalk.com">PalmTalk forum</a>. Make a thread about your ongoing experience and share pictures of
+    the outcome! Please include the palm species, general location, and the lowest temperature you recorded along with a
+    description
+    of any unusual weather events. Don't forget to tag kinzyjr!</p>
+<p class="mt-1">Do you write code? Contribute to the app by submitting a pull request on <a href="#">GitHub</a>.</p>
+<p class="mt-1">Ideas, suggestions, and feedback about the app can be sent to 5am on the PalmTalk forum, while thoughts
+    about the
+    data should be directed to kinzyjr.</p>
+
+
+<h1 class="is-size-4 my-2" id="datasources"><a href="#datasources"><i class="fa-solid fa-link"></i></a> Data Sources
+</h1>
+
+<article class="message mt-2 is-info">
+    <div class="message-body">
+        <p>There is no affiliation between this app and any of the wonderful data sources.</p>
+    </div>
+</article>
+
+<p class="mt-1">For each palm or cycad observation, the like-sources are grouped together then tallied.</p>
+
+<div class="table-container mt-4">
+    <table class="table is-striped is-fullwidth">
+        <thead>
+            <tr class="is-primary">
+                <th>Source</th>
+                <th>Count</th>
+                <th>Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ds in data.results %}
+            <tr>
+                <td>{{ ds.source }}</td>
+                <td>{{ ds.count }}</td>
+                <td>{{ ds.type }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </table>
+</div>
+
+<h3 class="is-size-4 mt-2" id="download"> <a href="#download"><i class="fa-solid fa-link"></i></a> Download</h3>
+<p class="mt-1">The latest cold hardiness master data is available as an Excel spreadsheet at <a
+        href="https://www.palmtalk.org/forum/topic/61358-0000-cold-hardiness-observation-master-data/">https://www.palmtalk.org/forum/topic/61358-0000-cold-hardiness-observation-master-data/</a>.
+    The app codebase is available at github here <a href="#">#</a>.</p>
 
 
 {% endblock %}

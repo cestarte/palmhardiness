@@ -10,77 +10,90 @@
 {% endblock %}
 {% block content %}
 
-<div id="filters" class="mb-0">
-    <form action="{{url_for('web.index')}}" method="get">
-        <div class="field is-grouped">
-            <div class="control">
-                <label for="search" class="label">Search</label>
-                <input type="text" class="input" name="search" id="search" value="{{data.search}}" />
-            </div>
-            <div class="control">
-                <label for="zone" class="label">Zone</label>
-                <div class="select">
-                    <select name="zone" id="zone">
-                        <option value="">All</option>
-                        {% for z in data.zones %}
-                        <option value="{{z.id}}" {% if data.zone==z.id %}selected{% endif %}>{{z.name}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-            <div class="control">
-                <label for="results_per_page" class="label">Results per page</label>
-                <div class="select">
-                    <select name="results_per_page" id="results_per_page">
-                        <option value="10" {% if data.results_per_page==10 %}selected{% endif %}>10</option>
-                        <option value="25" {% if data.results_per_page==25 %}selected{% endif %}>25</option>
-                        <option value="50" {% if data.results_per_page==50 %}selected{% endif %}>50</option>
-                        <option value="100" {% if data.results_per_page==100 %}selected{% endif %}>100</option>
-                    </select>
-                </div>
-            </div>
-            <div class="control">
-                <label for="sort" class="label">Sort</label>
-                <div class="select">
-                    <select name="sort" id="sort">
-                        <option value="genus" {% if data.sort=='genus' %}selected{% endif %}>Genus</option>
-                        <option value="species" {% if data.sort=='species' %}selected{% endif %}>Species</option>
-                        <option value="variety" {% if data.sort=='variety' %}selected{% endif %}>Variety</option>
-                        <option value="common_name" {% if data.sort=='common_name' %}selected {% endif %}>Common Name
-                        </option>
-                        <option value="zone" {% if data.sort=='zone' %}selected{% endif %}>Zone</option>
-                        <option value="observation_count" {% if data.sort=='observation_count' %}selected {% endif %}>
-                            Observations</option>
-                    </select>
-                </div>
-            </div>
-            <div class="control">
-                <label for="order" class="label">Order</label>
-                <div class="select">
-                    <select name="order" id="order">
-                        <option value="asc" {% if data.order=='asc' %}selected{% endif %}>Ascending</option>
-                        <option value="desc" {% if data.order=='desc' %}selected{% endif %}>Descending</option>
-                    </select>
-                </div>
-            </div>
-            <div class="control">
-                <button type="submit" class="button is-primary">Filter</button>
-            </div>
-        </div>
-    </form>
-</div>
 
 
-<div class="table-container mb-0">
-    <div class="grid">
-        <div class="cell">
+<div class="grid mb-1">
+    <div class="cell">
+
+        <div class="dropdown is-hoverable">
+            <div class="dropdown-trigger">
+                <button class="button" aria-haspopup="true" aria-controls="table-filters-menu">
+                    <span>Filters</span>
+                    <span class="icon is-small">
+                        <i class="fas fa-angle-down" aria-hidden="true"></i>
+                    </span>
+                </button>
+            </div>
+            <div class="dropdown-menu" id="table-filters-menu" role="menu">
+                <div class="dropdown-content">
+                    <div class="dropdown-item">
+
+
+                        <form id="table-filters" class="mb-0">
+                            <div class="field">
+                                <label for="zone" class="label">Zone</label>
+                                <div class="control">
+                                    <div class="select">
+                                        <select name="zone" id="zone">
+                                            <option value="" selected>All</option>
+                                            <option value="">zone name</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label for="results_per_page" class="label">Results per page</label>
+                                <div class="control">
+                                    <div class="select">
+                                        <select name="results_per_page" id="results_per_page">
+                                            <option value="15" selected>15</option>
+                                            <option value="25">25</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label for="sort" class="label">Sort</label>
+                                <div class="control">
+                                    <div class="select">
+                                        <select name="sort" id="sort">
+                                            <option value="genus" selected>Genus, Species, Variety</option>
+                                            <option value="common_name">Common Name</option>
+                                            <option value="zone">Zone</option>
+                                            <option value="observation_count">Observations</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label for="order" class="label">Order</label>
+                                <div class="control">
+                                    <div class="select">
+                                        <select name="order" id="order">
+                                            <option value="asc" selected>Ascending</option>
+                                            <option value="desc">Descending
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="cell">
-        </div>
-        <div class="cell">
-            <input type="text" class="input" placeholder="Search..." id="search-input" value="{{data.search}}" />
-        </div>
+
     </div>
+    <div class="cell">
+    </div>
+    <div class="cell">
+        <input type="text" class="input" placeholder="Search..." id="search-input" value="" />
+    </div>
+</div>
+<div class="table-container mb-0">
     <table class="table is-striped is-fullwidth" id="palm-table">
         <thead>
             <tr class="is-primary">
@@ -100,7 +113,7 @@
 
 
 <template id="table-pagination">
-    <p class="my-0">
+    <p class="mt-1">
         Page <span name="current-page"></span> of <span name="total_pages"></span>.
         Showing <span name="results_on_this_page"></span> of <span name="total_results"></span> results.
     </p>
@@ -118,7 +131,7 @@
         </ul>
 </template>
 
-
+<script src="{{ url_for('static', filename='js/table.js') }}"></script>
 <script>
     window.onload = function () {
         document.getElementById('search-input').addEventListener('input', function (e) {
@@ -126,134 +139,8 @@
         });
 
         // initial table population
-        refreshTable();
+        refreshTable(null, { 'page': 1, 'results_per_page': 15 });
     }
-
-
-    function refreshTable(term, meta) {
-        let url = 'http://localhost:5000/api/palm?search='
-        if (term)
-            url += term;
-        if (meta) {
-            for (let key in meta) {
-                url += '&' + key + '=' + meta[key];
-            }
-        }
-
-        getApiData(url).then(data => {
-            console.log('api results', data);
-            buildTableBody('palm-table', data);
-            buildTablePagination('palm-table', data);
-        }).catch(error => {
-            console.error(error);
-        });
-    }
-
-    function buildTableBody(tableId, data) {
-        let table = document.querySelector('#' + tableId);
-        let tbody = table.querySelector('tbody');
-        tbody.innerHTML = '';
-        data.records.forEach(p => {
-            let tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${p['genus']}</td>
-                <td>${p['species']}</td>
-                <td>${p['variety']}</td>
-                <td>${p['common_name']}</td>
-                <td>${p['zone_name']}</td>
-                <td><a href="#">${p['observation_count']}</a></td>
-            `;
-            tbody.appendChild(tr);
-        });
-        if (data.records.length == 0) {
-            let tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="6"><em>No data available.</em></td>';
-            tbody.appendChild(tr);
-        }
-    }
-
-    function buildTablePagination(tableDataId, data) {
-        const placeholderElem = document.querySelector('[data-id="pagination-placeholder"]');
-        const template = document.querySelector('#table-pagination')
-        let clone = template.content.cloneNode(true);
-        let currentPageElem = clone.querySelector('[name="current-page"]');
-        let pageInputElem = clone.querySelector('[name="page-input"]');
-        let pageInputGoElem = clone.querySelector('[name="go"]');
-        let totalPagesElem = clone.querySelector('[name="total_pages"]');
-        let resultsOnThisPageElem = clone.querySelector('[name="results_on_this_page"]');
-        let totalResultsElem = clone.querySelector('[name="total_results"]');
-        let nextPageElem = clone.querySelector('.pagination-next');
-        let prevPageElem = clone.querySelector('.pagination-previous');
-
-        currentPageElem.innerText = data.meta.page;
-        pageInputElem.value = data.meta.page;
-        totalPagesElem.innerText = data.meta.total_pages;
-        resultsOnThisPageElem.innerText = data.meta.results_on_this_page;
-        totalResultsElem.innerText = data.meta.total_results;
-
-        // If only 1 page, disable the prev button
-        if (data.meta.page <= 1) {
-            prevPageElem.setAttribute('disabled', '');
-        } else {
-            // ... otherwise, wire up the prev button
-            prevPageElem.addEventListener('click', function (e) {
-                e.preventDefault();
-                refreshTable(data.meta.search, { 'page': data.meta.page - 1, 'results_per_page': data.meta.results_per_page });
-            });
-        }
-
-        // If at the last page, disable the next button
-        if (data.meta.page == data.meta.total_pages) {
-            nextPageElem.setAttribute('disabled', '');
-        } else {
-            // ...otherwise, wire up the next button
-            nextPageElem.addEventListener('click', function (e) {
-                e.preventDefault();
-                refreshTable(data.meta.search, { 'page': data.meta.page + 1, 'results_per_page': data.meta.results_per_page });
-            });
-        }
-
-        // If only 1 page, disable the input 
-        if (data.meta.total_pages <= 1) {
-            pageInputElem.setAttribute('disabled', '');
-            pageInputGoElem.setAttribute('disabled', '');
-        } else {
-            // ...otherwise, wire up the go button
-            pageInputGoElem.addEventListener('click', function (e) {
-                e.preventDefault();
-                let page = parseInt(pageInputElem.value);
-                if (page > 0 && page <= data.meta.total_pages) {
-                    refreshTable(data.meta.search, { 'page': page, 'results_per_page': data.meta.results_per_page });
-                }
-            });
-        }
-
-
-        let table = document.querySelector('[data-id="' + tableDataId + '"]');
-
-        // insert the pagination after the table (or table-container element) 
-        //table.parentNode.parentNode.insertBefore(clone, table.parentNode.nextSibling);
-        placeholderElem.innerHTML = '';
-        placeholderElem.appendChild(clone);
-    }
-
-    async function getApiData(url) {
-        let response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        let data = await response.json();
-        return data;
-    }
-
-    function debounce(func, timeout = 510) {
-        let timer;
-        return (...args) => {
-            clearTimeout(timer);
-            timer = setTimeout(() => { func.apply(this, args); }, timeout);
-        };
-    }
-    const processSearch = debounce((term) => refreshTable(term));
 </script>
 
 {% endblock %}
