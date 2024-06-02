@@ -7,11 +7,15 @@ queries = {
 SELECT COUNT(*) as count
 FROM Palm
     """,
+
+
     "search_count": """
 SELECT COUNT(*) as count
 FROM Palm
 WHERE Genus LIKE ? OR Species LIKE ? OR Variety LIKE ? OR CommonName LIKE ?
     """,
+
+
     "get_all": """
 SELECT Palm.*
     ,Zone.Name as ZoneName
@@ -23,6 +27,8 @@ GROUP BY Palm.Id
 ORDER BY Genus, Species, Variety
 LIMIT ? OFFSET ?
     """,
+
+
     "search_all": """
 SELECT Palm.*
     ,Zone.Name as ZoneName
@@ -35,16 +41,25 @@ GROUP BY Palm.Id
 ORDER BY Genus, Species, Variety
 LIMIT ? OFFSET ?
     """,
+
+
     "get_one": """
 SELECT Palm.*
     ,Zone.Name as ZoneName
+	,(SELECT COUNT(*) 
+		FROM PalmObservation
+	WHERE PalmId = Palm.Id) AS [ObservationCount]
 FROM Palm
-WHERE Id = ?
 LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
+WHERE Palm.Id = ?
     """,
+
+
     "drop": """
 DROP TABLE IF EXISTS "Palm"
     """,
+
+
     "create": """
 CREATE TABLE IF NOT EXISTS "Palm" (
   "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -59,6 +74,8 @@ CREATE TABLE IF NOT EXISTS "Palm" (
   FOREIGN KEY (ZoneId) REFERENCES "Zone" (Id)
 );
     """,
+
+
     "get_all_with_palmobservation_count": """
 SELECT Palm.*
     ,Zone.Name as ZoneName
@@ -70,6 +87,23 @@ GROUP BY Palm.Id
 ORDER BY Genus, Species, Variety
 LIMIT ? OFFSET ?
     """,
+
+    "get_observations_for_palm": """
+SELECT PalmObservation.*
+    ,Palm.LegacyId as PalmLegacyId
+    ,Palm.Genus as PalmGenus
+    ,Palm.Species as PalmSpecies
+    ,Palm.Variety as PalmVariety
+    ,Palm.CommonName as PalmCommonName
+    ,Palm.ZoneId as PalmZoneId
+    ,Zone.Name as ZoneName
+FROM PalmObservation
+LEFT JOIN Palm ON PalmObservation.PalmId = Palm.Id
+LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
+WHERE PalmObservation.PalmId = ?
+ORDER BY PalmObservation.ObservationDate DESC
+    """,
+
 }
 
 def read_from_row(row:sqlite3.Row) -> Palm:

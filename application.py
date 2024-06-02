@@ -31,6 +31,9 @@ def about():
     }
     return render_template('about.html', data=data)
 
+@app.route('/map', methods=['GET'])
+def map():
+    return render_template('map.html')
 
 @app.route('/', methods=['GET'])
 def index():
