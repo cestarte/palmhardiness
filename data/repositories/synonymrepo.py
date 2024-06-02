@@ -1,5 +1,6 @@
 import openpyxl
 import sqlite3
+from util.string import clean
 from data.models.synonym import Synonym
 
 queries = {
@@ -28,9 +29,9 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
     for row in ws.iter_rows(min_row=first_row_with_data, values_only=True):
         item = Synonym()
         item.palm_legacy_id = row[0]
-        item.genus = row[1]
-        item.species = row[2]
-        item.variety = row[3]
+        item.genus = clean(row[1])
+        item.species = clean(row[2])
+        item.variety = clean(row[3])
         items.append(item)
 
         item2 = Synonym()

@@ -30,12 +30,12 @@ function buildTableBody(tableId, data) {
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </a> 
             </td>
-            <td>${p['genus']}</td>
-            <td>${p['species']}</td>
-            <td>${p['variety']}</td>
-            <td>${p['common_name']}</td>
-            <td>${p['zone_name']}</td>
-            <td><a href="/palm/${p['id']}#observations">${p['observation_count']}</a></td>
+            <td>${p['genus'] || ''}</td>
+            <td>${p['species'] || ''}</td>
+            <td>${p['variety'] || ''}</td>
+            <td>${p['common_name'] || ''}</td>
+            <td>${p['zone_name'] || ''}</td>
+            <td>${p['observation_count']}</td>
         `;
         tbody.appendChild(tr);
     });

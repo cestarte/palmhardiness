@@ -1,5 +1,6 @@
 import openpyxl
 import sqlite3
+from util.string import clean
 from data.models.damage import Damage
 
 queries = {
@@ -26,7 +27,7 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
     for row in ws.iter_rows(first_row_with_data, None):
         damage = Damage()
         damage.legacy_id = row[0].value
-        damage.text = row[1].value
+        damage.text = clean(row[1].value)
         damages.append(damage)
 
     wb.close()

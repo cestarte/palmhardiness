@@ -1,5 +1,6 @@
 import openpyxl
 import sqlite3
+from util.string import clean
 from data.models.cycad import Cycad
 
 queries = {
@@ -30,11 +31,11 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
         cycad = Cycad()
         cycad.id = None
         cycad.legacy_id = row[0]
-        cycad.genus = row[1]
-        cycad.species = row[2]
-        cycad.variety = row[3]
-        cycad.common_name = row[4]
-        cycad.zone_name = row[5]
+        cycad.genus = clean(row[1])
+        cycad.species = clean(row[2])
+        cycad.variety = clean(row[3])
+        cycad.common_name = clean(row[4])
+        cycad.zone_name = clean(row[5])
         cycad.zone_id = -1
 
         if '2023' in workbook and cycad.legacy_id == 8025 and cycad.genus is None:

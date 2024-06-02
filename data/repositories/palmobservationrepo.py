@@ -1,5 +1,6 @@
 import openpyxl
 import sqlite3
+from util.string import clean
 from data.models.palmobservation import PalmObservation
 
 queries = {
@@ -48,13 +49,13 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> lis
         i.damage_legacy_id = row[7]
         i.event_id = None
         i.event_legacy_id = row[10]
-        i.who_reported = row[2]
-        i.city = row[3]
-        i.state = row[4]
-        i.country = row[5]
+        i.who_reported = clean(row[2])
+        i.city = clean(row[3])
+        i.state = clean(row[4])
+        i.country = clean(row[5])
         i.low_temp = row[6]
-        i.description = row[8]
-        i.source = row[9]
+        i.description = clean(row[8])
+        i.source = clean(row[9])
 
         if '2023' in workbook and i.legacy_id == 4912 and i.event_id == None:
             print("[WARNING] Correcting for single 2023 observation missing event id")

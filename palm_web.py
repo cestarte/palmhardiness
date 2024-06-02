@@ -1,11 +1,6 @@
 from flask import Flask, jsonify, render_template, request, Blueprint, g, current_app, url_for
 import requests
-import json
-import sys
 import math
-from data.models.palm import Palm, PalmSerializer
-from data.repositories import palmrepo as palm
-import palm_api as papi
 
 web = Blueprint('web', __name__)
 
@@ -15,7 +10,6 @@ def index():
     results_per_page = request.args.get('results_per_page', 25, type=int)
     search_term = request.args.get('search', None, type=str)
 
-    #api_response = requests.get(url_for('papi.palm'), params={'offset': page*results_per_page, 'num_results': results_per_page, 'search': search_term})
     api_response = requests.get('http://127.0.0.1:5000/api/palm', params={'offset': page*results_per_page, 'num_results': results_per_page, 'search': search_term})
     api_json = api_response.json()
 
@@ -42,3 +36,12 @@ def index():
     }
     return render_template('palm_index.html', data=data)
 
+@web.route('/<int:palm_id>', methods=['GET'])
+def detail(palm_id):
+    api_response = requests.get(f'http://127.0.0.1:5000/api/palm/{palm_id}')
+    api_json = api_response.json()
+
+    if api_response.status_code == 200 and api_json is not None:
+            return render_template('palm_detail.html', data=api_json)
+    else:
+         return render_template('404_generic.html'), 404

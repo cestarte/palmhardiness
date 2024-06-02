@@ -1,5 +1,6 @@
 import openpyxl
 import sqlite3
+from util.string import clean
 from data.models.palm import Palm
 
 queries = {
@@ -133,17 +134,16 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
         palm = Palm()
         palm.id = None
         palm.legacy_id = row[0]
-        palm.genus = row[1]
-        palm.species = row[2]
-        palm.variety = row[3]
-        palm.common_name = row[4]
-        palm.zone_name = row[5]
+        palm.genus = clean(row[1])
+        palm.species = clean(row[2])
+        palm.variety = clean(row[3])
+        palm.common_name = clean(row[4])
+        palm.zone_name = clean(row[5])
         palm.zone_id = -1
         palms.append(palm)
 
     wb.close()
     return palms
-
 
 def write_to_database(database_path:str, palms:list[Palm]) -> None:
     print("Inserting palms to database...")

@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% block title %}{{data.palm_name}}{% endblock %}
+{% block header %}
+<section class="hero is-info">
+    <div class="hero-body">
+        <p class="title">{{data.palm_name}}</p>
+        <p class="subtitle">{{data.common_name if data.common_name is not none}}</p>
+    </div>
+</section>
+{% endblock %}
+{% block content %}
+
+<div class="columns is-centered">
+    <div class="column is-one-third">
+        <a target="_blank" href="https://palmpedia.net/wiki/index.php5?search={{data.palm_name}}"> <i
+                class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmPedia</a>
+    </div>
+</div>
+
+<code>
+    {{data}}
+</code>
+
+<div class="columns">
+    <div class="column is-one-third">
+        <div class="card">
+            <div class="card-content">
+                <div class="content">
+                    <p><strong>Genus</strong> {{data.genus}}</p>
+                    <p><strong>Species</strong> {{data.species}}</p>
+                    <p><strong>Common Name</strong> {{data.common_name}}</p>
+                    <div>
+                        <div class="dropdown is-hoverable">
+                            <div class="dropdown-trigger">
+                                <p><strong>USDA Zone</strong> <i class="fa-solid fa-circle-info is-size-7"
+                                        aria-haspopup="true" aria-controls="zone-help"></i></p>
+                            </div>
+                            <div class="dropdown-menu" id="zone-help" role="menu">
+                                <div class="dropdown-content">
+                                    <div class="dropdown-item is-size-7 has-text-weight-normal">
+                                        <p>USDA Hardiness Zones are based on the average annual minimum
+                                            temperature.</p>
+                                        <a target="_blank" href="https://planthardiness.ars.usda.gov/"> <i
+                                                class="fa-solid fa-arrow-up-right-from-square"></i> More info at
+                                            usda.gov</a>
+                                    </div>
+                                </div>
+                            </div> <span class="is-pulled-right">{{data.zone_name}}</span>
+                        </div>
+                        <p><strong>Notes</strong> {{data.notes}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="column is-two-thirds">
+            <div class="card">
+                <div class="card-content">
+                    <div class="content">
+                        <p><strong>Image:</strong> <img src="{{data.image}}" alt="{{data.common_name}}" /></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endblock %}

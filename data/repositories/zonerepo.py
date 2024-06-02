@@ -1,5 +1,6 @@
 import openpyxl
 import sqlite3
+from util.string import clean
 from data.models.zone import Zone
 
 queries = {
@@ -26,7 +27,7 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
 
     for row in ws.iter_rows(min_row=first_row_with_data, values_only=True):
         zone = Zone()
-        zone.name = row[0]
+        zone.name = clean(row[0])
         zone.min = row[1]
         zone.max = row[2]
         zones.append(zone)

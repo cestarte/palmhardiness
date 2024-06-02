@@ -96,6 +96,10 @@ def get_all_old():
 @api.route('/<int:palm_id>', methods=['GET'])
 def get_one(palm_id):
     record = query_db(query=palm.queries['get_one'], args=(palm_id,), one=True)
+    if record is not None:
+        obj = palm.read_from_row(record)
+        return json.dumps(obj, cls=PalmSerializer)
+    return json.dumps(None)
     obj = palm.read_from_row(record)
     return json.dumps(obj, cls=PalmSerializer)
 

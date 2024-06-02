@@ -16,10 +16,21 @@ class Palm:
         # fields not in the database but commonly included
         self.zone_name = None
         self.observation_count = None
+        self.palm_name = None
     
 class PalmSerializer(JSONEncoder):
     def default(self, o):
         if isinstance(o, Palm):
+
+            if o.species == '' or o.species == '<Genus>':
+                o.species = None
+
+            palm_name = o.genus
+            if o.species is not None and o.species != "<Genus>":
+                palm_name += f" {o.species}"
+            if o.variety is not None:
+                palm_name += f" {o.variety}"
+
             serialized = {
                 "id": o.id,
                 "legacy_id": o.legacy_id,
@@ -32,9 +43,8 @@ class PalmSerializer(JSONEncoder):
                 "common_name": o.common_name,
                 "zone_name": o.zone_name,
                 "observation_count": o.observation_count,
+                "palm_name": palm_name,
             }
-
-
 
             return serialized
         return super(PalmSerializer, self).default(o)

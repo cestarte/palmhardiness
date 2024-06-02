@@ -1,5 +1,6 @@
 import openpyxl
 import sqlite3
+from util.string import clean
 from data.models.event import Event
 
 queries = {
@@ -32,12 +33,12 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
         event = Event()
         event.id = None
         event.legacy_id = row[0]
-        event.who_reported = row[1]
-        event.city = row[2]
-        event.state = row[3]
-        event.country = row[4]
-        event.name = row[5]
-        event.description = row[6]
+        event.who_reported = clean(row[1])
+        event.city = clean(row[2])
+        event.state = clean(row[3])
+        event.country = clean(row[4])
+        event.name = clean(row[5])
+        event.description = clean(row[6])
         events.append(event)
 
     wb.close()
