@@ -39,11 +39,13 @@ From a powershell terminal:
 
 `venv\Scripts\Activate.ps1`
 
-## Install the prerequisites
+### Install the prerequisites
 
 Packages required by the python app are listed in the text file.
 
 `pip install -r requirements.txt`
+
+![Prepare the environment](./static/readme/environment.png)
 
 ## Create the sqlite database
 
@@ -54,6 +56,8 @@ Build the sqlite3 database tables and relationships.
 The `--drop` argument will delete and overwrite the database tables, 
 if already existing. 
 
+![Prepare the database](./static/readme/prepare_db.png)
+
 ## Perform the import
 
 Populate the database from the excel file.
@@ -62,11 +66,16 @@ Populate the database from the excel file.
 
 The `--excel` argument specifies the path to the cold hardiness data set.
 
+![Populate the database](./static/readme/populate_db.png)
+
 ## Launch the web app
 
 This launches a development Flask server, probably running at http://localhost:5000 (check your terminal.) 
 
 `python application.py`
+
+![Launch the app](./static/readme/launch.png)
+
 
 # Misc
 
