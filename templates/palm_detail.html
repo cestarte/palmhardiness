@@ -10,57 +10,106 @@
 {% endblock %}
 {% block content %}
 
-<div class="columns is-centered">
-    <div class="column is-one-third">
-        <a target="_blank" href="https://palmpedia.net/wiki/index.php5?search={{data.palm_name}}"> <i
-                class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmPedia</a>
+<div class="columns">
+
+    <div class="column is-half">
+        <div class="dropdown is-hoverable">
+            <div class="dropdown-trigger">
+                <p><strong>USDA Zone</strong> <i class="fa-solid fa-circle-info is-size-7" aria-haspopup="true"
+                        aria-controls="zone-help"></i></p>
+            </div>
+            <div class="dropdown-menu" id="zone-help" role="menu">
+                <div class="dropdown-content">
+                    <div class="dropdown-item is-size-7 has-text-weight-normal">
+                        <p>USDA Hardiness Zones are based on the average annual minimum
+                            temperature.</p>
+                        <a target="_blank" href="https://planthardiness.ars.usda.gov/"> <i
+                                class="fa-solid fa-arrow-up-right-from-square"></i> More info at
+                            usda.gov</a>
+                    </div>
+                </div>
+            </div> <span class="ml-2">{{data.zone_name}}</span>
+        </div>
+    </div>
+
+    <div class="column is-half">
+        <p class="is-pulled-right"> <a target="_blank"
+                href="https://palmpedia.net/wiki/index.php5?search={{data.palm_name}}">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmPedia</a></p>
     </div>
 </div>
 
-<code>
-    {{data}}
-</code>
+<div class="table-container mb-0">
+    <table class="table is-striped is-fullwidth" id="observation-table">
+        <thead>
+            <tr class="is-primary">
+                <th>Location</th>
+                <th>Low Temp</th>
+                <th>Damage</th>
+                <th>Damage Description</th>
+                <th>Event Name</th>
+                <th>Event Description</th>
+                <th>Event Reported By</th>
+                <th>Source</th>
+            </tr>
+        </thead>
+        <tbody>
 
-<div class="columns">
-    <div class="column is-one-third">
-        <div class="card">
-            <div class="card-content">
-                <div class="content">
-                    <p><strong>Genus</strong> {{data.genus}}</p>
-                    <p><strong>Species</strong> {{data.species}}</p>
-                    <p><strong>Common Name</strong> {{data.common_name}}</p>
-                    <div>
-                        <div class="dropdown is-hoverable">
-                            <div class="dropdown-trigger">
-                                <p><strong>USDA Zone</strong> <i class="fa-solid fa-circle-info is-size-7"
-                                        aria-haspopup="true" aria-controls="zone-help"></i></p>
-                            </div>
-                            <div class="dropdown-menu" id="zone-help" role="menu">
-                                <div class="dropdown-content">
-                                    <div class="dropdown-item is-size-7 has-text-weight-normal">
-                                        <p>USDA Hardiness Zones are based on the average annual minimum
-                                            temperature.</p>
-                                        <a target="_blank" href="https://planthardiness.ars.usda.gov/"> <i
-                                                class="fa-solid fa-arrow-up-right-from-square"></i> More info at
-                                            usda.gov</a>
-                                    </div>
-                                </div>
-                            </div> <span class="is-pulled-right">{{data.zone_name}}</span>
-                        </div>
-                        <p><strong>Notes</strong> {{data.notes}}</p>
-                    </div>
-                </div>
+        </tbody>
+    </table>
+</div>
+
+<div class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Modal title</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <!-- Content ... -->
+        </section>
+        <footer class="modal-card-foot">
+            <div class="buttons">
+                <button class="button is-success">Save changes</button>
+                <button class="button">Cancel</button>
             </div>
-        </div>
-        <div class="column is-two-thirds">
-            <div class="card">
-                <div class="card-content">
-                    <div class="content">
-                        <p><strong>Image:</strong> <img src="{{data.image}}" alt="{{data.common_name}}" /></p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </footer>
     </div>
+</div>
 
-    {% endblock %}
+<script>
+    window.onload = function () {
+        getObservations()
+    }
+
+    function getObservations() {
+        fetch('/api/palm/{{data.id}}/observations')
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                const table = document.getElementById('observation-table').getElementsByTagName('tbody')[0]
+                data.forEach(o => {
+                    let row = table.insertRow(-1)
+                    let location = row.insertCell(0)
+                    let low_temp = row.insertCell(1)
+                    let damage = row.insertCell(2)
+                    let description = row.insertCell(3)
+                    let event_name = row.insertCell(4)
+                    let event_description = row.insertCell(5)
+                    let event_reported_by = row.insertCell(6)
+                    let source = row.insertCell(7)
+                    location.innerHTML = o.location
+                    low_temp.innerHTML = o.low_temp
+                    damage.innerHTML = o.damage_text
+                    description.innerHTML = o.description
+                    event_name.innerHTML = o.event_name
+                    event_description.innerHTML = `<div class="is-clipped">${o.event_description}</div>`
+                    event_reported_by.innerHTML = o.event_who_reported
+                    source.innerHTML = `<a href="${o.source}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> ${o.source}</a>`
+                })
+            })
+    }
+</script>
+
+{% endblock %}

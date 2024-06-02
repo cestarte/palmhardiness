@@ -1,9 +1,10 @@
 from flask import Blueprint, g, current_app, request
 import sqlite3
 from data.models.palm import Palm, PalmSerializer
+from data.models.palmobservation import PalmObservation, PalmObservationSerializer
 from data.repositories import palmrepo as palm
+from data.repositories import palmobservationrepo as palmobservation
 import json
-import sys
 import math
 
 api = Blueprint('palm_api', __name__)
@@ -65,8 +66,7 @@ def get_all():
         }
     }
 
-@api.route('/old', methods=['GET'])
-def get_all_old():
+
     offset = request.args.get('offset', 0, type=int)
     num_results = request.args.get('num_results', 25, type=int)
     search_term = request.args.get('search', None, type=str)
@@ -100,9 +100,14 @@ def get_one(palm_id):
         obj = palm.read_from_row(record)
         return json.dumps(obj, cls=PalmSerializer)
     return json.dumps(None)
-    obj = palm.read_from_row(record)
-    return json.dumps(obj, cls=PalmSerializer)
 
+@api.route('/<int:palm_id>/observations', methods=['GET'])
+def get_observations(palm_id):
+    records = query_db(query=palmobservation.queries['get_all_for_palm'], args=(palm_id,))
+    objects:list[PalmObservation] = [palmobservation.read_from_row(row) for row in records]
+    objects_json_string = json.dumps(objects, cls=PalmObservationSerializer)
+    objects_json = json.loads(objects_json_string)
+    return objects_json
 
 def get_db():
     db = getattr(g, '_database', None)

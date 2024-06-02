@@ -7,6 +7,7 @@ queries = {
     "drop": """
 DROP TABLE IF EXISTS "PalmObservation"
     """,
+
     "create": """
 CREATE TABLE IF NOT EXISTS "PalmObservation" (
     "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -31,6 +32,19 @@ CREATE TABLE IF NOT EXISTS "PalmObservation" (
     FOREIGN KEY (EventId) REFERENCES "Event" (Id)
 );
     """,
+
+    "get_all_for_palm": """
+SELECT PalmObservation.*
+    ,Event.Name as EventName
+    ,Event.Description as EventDescription
+    ,Event.WhoReported as EventWhoReported
+    ,Damage.Text as DamageText
+FROM PalmObservation
+LEFT JOIN Event on PalmObservation.EventId = Event.Id
+LEFT JOIN Damage on PalmObservation.DamageId = Damage.Id
+WHERE PalmId = ?
+    """,
+
 }
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> list[PalmObservation]:
@@ -189,3 +203,32 @@ def write_to_database(database_path:str, observations:list[PalmObservation]) -> 
     finally:
         if con:
             con.close()
+
+
+def read_from_row(row:sqlite3.Row) -> PalmObservation:
+    o = PalmObservation()
+    o.id = row['Id']
+    o.legacy_id = row['LegacyId']
+    o.palm_id = row['PalmId']
+    o.palm_legacy_id = row['PalmLegacyId']
+    o.who_reported = row['WhoReported']
+    o.city = row['City']
+    o.state = row['State']
+    o.country = row['Country']
+    o.damage_id = row['DamageId']
+    o.damage_legacy_id = row['DamageLegacyId']
+    o.event_id = row['EventId']
+    o.event_legacy_id = row['EventLegacyId']
+    o.description = row['Description']
+    o.source = row['Source']
+    o.low_temp = row['LowTemp']
+    o.last_modified = row['LastModified']
+    o.who_modified = row['WhoModified']
+
+    # These are the joined fields
+    o.event_name = row['EventName']
+    o.event_description = row['EventDescription']
+    o.event_who_reported = row['EventWhoReported']
+    o.damage_text = row['DamageText']
+
+    return o
