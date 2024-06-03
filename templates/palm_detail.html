@@ -1,14 +1,22 @@
 {% extends "layout.html" %}
 {% block title %}{{data.palm_name}}{% endblock %}
+{% block head %}
+<script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+{% endblock %}
 {% block header %}
-<section class="hero is-info">
+<section class=" hero is-info">
     <div class="hero-body">
-        <p class="title">{{data.palm_name}}</p>
-        <p class="subtitle">{{data.common_name if data.common_name is not none}}</p>
+        <p class="title">{{ data.palm_name }}</p>
+        <p class="subtitle">{{ data.common_name if data.common_name is not none }}</p>
     </div>
 </section>
 {% endblock %}
 {% block content %}
+
+{% include 'modal.html' %}
+
+<button class="button is-primary" id="test" data-modal-id="testmodal">Add Observation</button>
+
 
 <div class="columns">
 
@@ -46,7 +54,7 @@
                 <th>Location</th>
                 <th>Low Temp</th>
                 <th>Damage</th>
-                <th>Damage Description</th>
+                <th>Description</th>
                 <th>Event Name</th>
                 <th>Event Description</th>
                 <th>Event Reported By</th>
@@ -59,28 +67,16 @@
     </table>
 </div>
 
-<div class="modal">
-    <div class="modal-background"></div>
-    <div class="modal-card">
-        <header class="modal-card-head">
-            <p class="modal-card-title">Modal title</p>
-            <button class="delete" aria-label="close"></button>
-        </header>
-        <section class="modal-card-body">
-            <!-- Content ... -->
-        </section>
-        <footer class="modal-card-foot">
-            <div class="buttons">
-                <button class="button is-success">Save changes</button>
-                <button class="button">Cancel</button>
-            </div>
-        </footer>
-    </div>
-</div>
 
 <script>
+    var uniqueElemCounter = 0
+
+
     window.onload = function () {
         getObservations()
+        testelem = document.getElementById('test')
+        console.log('list', testelem.classList)
+        createModal(testelem, "HEADER", "BODY", "FOOTER")
     }
 
     function getObservations() {
@@ -99,16 +95,37 @@
                     let event_description = row.insertCell(5)
                     let event_reported_by = row.insertCell(6)
                     let source = row.insertCell(7)
-                    location.innerHTML = o.location
-                    low_temp.innerHTML = o.low_temp
-                    damage.innerHTML = o.damage_text
-                    description.innerHTML = o.description
-                    event_name.innerHTML = o.event_name
-                    event_description.innerHTML = `<div class="is-clipped">${o.event_description}</div>`
-                    event_reported_by.innerHTML = o.event_who_reported
+                    location.innerHTML = o.location || ''
+                    low_temp.innerHTML = o.low_temp || ''
+                    damage.innerHTML = o.damage_text || ''
+                    longTextModalTrigger(description, o.description, 100)
+                    //description.innerHTML = o.description || ''
+                    event_name.innerHTML = o.event_name || ''
+
+                    longTextModalTrigger(event_description, o.event_description, 100, o.event_name || null)
+                    //event_description.innerHTML = o.event_description || ''
+                    event_reported_by.innerHTML = o.event_who_reported || ''
                     source.innerHTML = `<a href="${o.source}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> ${o.source}</a>`
                 })
             })
+    }
+
+    function longTextModalTrigger(triggerElem, text, maxLength, title = null) {
+        // directly affects the DOM element 
+
+        if (!text) {
+            triggerElem.innerHTML = ''
+            return
+        } else if (text.length <= maxLength) {
+            triggerElem.innerHTML = text
+            return
+        }
+
+        let preview_text = text.substr(0, maxLength) + '...'
+        triggerElem.setAttribute('data-modal-id', `longText-${uniqueElemCounter++}`)
+        triggerElem.innerHTML = preview_text
+        let modal_content = `${text.replace('\n', '<br /><br />')}`
+        createModal(triggerElem, title, modal_content)
     }
 </script>
 

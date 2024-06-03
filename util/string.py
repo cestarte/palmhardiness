@@ -9,9 +9,9 @@ def clean(s:str) -> str | None:
         return None
     
     normalized =  unicodedata.normalize('NFKD', s).strip()
-    normalized = normalized.replace("""._x000D_
+    normalized = normalized.replace("""_x000D_
 _________.""", '\n')
-    normalized = normalized.replace('._x000D_', '\n')
+    normalized = normalized.replace('_x000D_', '\n')
 
     if normalized == "":
         return None

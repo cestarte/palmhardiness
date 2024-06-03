@@ -2,13 +2,12 @@
 <html lang="en">
 
 <head>
-    {% block head %}
     <title>PCH: {% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bulma.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome6/css/fontawesome.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome6/css/brands.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome6/css/solid.min.css') }}">
-
+    {% block head %}
     {% endblock %}
 </head>
 
