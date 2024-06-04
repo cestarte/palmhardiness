@@ -15,9 +15,6 @@
 
 {% include 'modal.html' %}
 
-<button class="button is-primary" id="test" data-modal-id="testmodal">Add Observation</button>
-
-
 <div class="columns">
 
     <div class="column is-half">
@@ -67,10 +64,26 @@
     </table>
 </div>
 
+<template id="observation-temp">
+    <div class="dropdown is-up is-hoverable">
+        <div class="dropdown-trigger">
+            <span aria-haspopup="true" aria-controls="observation-temp-dropdown">
+                <span name="f"></span>
+            </span>
+        </div>
+        <div class="dropdown-menu" id="observation-temp-dropdown" role="menu">
+            <div class="dropdown-content">
+                <div class="dropdown-item">
+                    <p><span name="f"></span> °F</p>
+                    <p><span name="c"></span> °C</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
 
 <script>
     var uniqueElemCounter = 0
-
 
     window.onload = function () {
         getObservations()
@@ -96,18 +109,33 @@
                     let event_reported_by = row.insertCell(6)
                     let source = row.insertCell(7)
                     location.innerHTML = o.location || ''
-                    low_temp.innerHTML = o.low_temp || ''
+                    //low_temp.innerHTML = o.low_temp || ''
+                    temperatureDropdown(low_temp, o.low_temp)
                     damage.innerHTML = o.damage_text || ''
                     longTextModalTrigger(description, o.description, 100)
-                    //description.innerHTML = o.description || ''
                     event_name.innerHTML = o.event_name || ''
-
                     longTextModalTrigger(event_description, o.event_description, 100, o.event_name || null)
-                    //event_description.innerHTML = o.event_description || ''
                     event_reported_by.innerHTML = o.event_who_reported || ''
                     source.innerHTML = `<a href="${o.source}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> ${o.source}</a>`
                 })
             })
+    }
+
+    function temperatureDropdown(targetElem, f) {
+        if (!targetElem || !f) {
+            return
+        }
+
+        // directly affects the DOM by inserting a temperature dropdown into the targetElem
+        id = `temperature-${uniqueElemCounter++}`
+        const clone = document.getElementById('observation-temp').content.cloneNode(true)
+        let popupTriggerElem = clone.querySelector('[aria-haspopup="true"]')
+        popupTriggerElem.setAttribute('aria-controls', id)
+        let dropdownMenu = clone.querySelector('[id="observation-temp-dropdown"]')
+        dropdownMenu.setAttribute('id', id)
+        clone.querySelectorAll('[name="f"]').forEach(elem => { elem.innerHTML = f })
+        clone.querySelector('[name="c"]').innerHTML = ((f - 32) * 5 / 9).toFixed(2)
+        targetElem.appendChild(clone)
     }
 
     function longTextModalTrigger(triggerElem, text, maxLength, title = null) {
@@ -122,7 +150,7 @@
         }
 
         let preview_text = text.substr(0, maxLength) + '...'
-        triggerElem.setAttribute('data-modal-id', `longText-${uniqueElemCounter++}`)
+        triggerElem.setAttribute('data-modal-id', `longtext-${uniqueElemCounter++}`)
         triggerElem.innerHTML = preview_text
         let modal_content = `${text.replace('\n', '<br /><br />')}`
         createModal(triggerElem, title, modal_content)
