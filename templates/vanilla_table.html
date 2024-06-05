@@ -1,0 +1,29 @@
+<template id="table-template">
+    <table class="table is-striped is-fullwidth" id="observation-table">
+        <thead>
+            <tr class="is-primary">
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</template>
+
+<template id="table-pagination-template">
+    <p class="mt-1">
+        Page <span name="current-page"></span> of <span name="total_pages"></span>.
+        Showing <span name="results_on_this_page"></span> of <span name="total_results"></span> results.
+    </p>
+    <nav class="pagination" role="navigation" aria-label="pagination">
+        <a href="#" class="pagination-previous">Previous</a>
+        <a href="#" class="pagination-next">Next page</a>
+
+        <ul class="pagination-list">
+            <li>
+                <input type="input" type="number" class="input" value="" name="page-input" size="3" />
+            </li>
+            <li>
+                <a href="#" class="pagination-link" name="go" aria-label="Go to page">Go</a>
+            </li>
+        </ul>
+</template>

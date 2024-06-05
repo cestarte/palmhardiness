@@ -1,3 +1,135 @@
+var vanillaTableUnique = 0;
+
+class VanillaTable {
+    constructor(options) {
+        console.log('VanillaTable constructor', options)
+        if (options.parent_elem_id === null) {
+            console.error('Parent element cannot be null.')
+            throw new Error('Parent element cannot be null.')
+        }
+
+        if (options.data_url === null) {
+            console.error('Data URL cannot be null.')
+            throw new Error('Data URL cannot be null.')
+        }
+
+        this.options = options;
+
+        this.$parent = document.getElementById(this.options.parent_elem_id);
+
+        if (this.$parent === null) {
+            throw new Error(`Parent element not found. "${this.options.parent_elem_id}"`)
+        }
+
+        this.$table = null
+        this.pagination = null
+    }
+
+    createTable(options = null) {
+        if (options === null) {
+            options = this.options
+        }
+        const $template = document.querySelector('#table-template')
+        let clone = $template.content.cloneNode(true);
+
+        if (this.$template === null) {
+            console.error('Table template not found. Did you forget to include the html template?')
+            throw new Error('Table template not found.')
+        }
+
+        this.populateTableHeader(clone, options.columns)
+        //populateTableBody(clone, options.data)
+        this.$parent.appendChild(clone)
+        this.$table = this.$parent.querySelector('table')
+    }
+
+    populateTableHeader($table, columns) {
+        let $thead = $table.querySelector('thead')
+        let $tr = document.createElement('tr')
+        columns.forEach(column => {
+            let $th = document.createElement('th')
+            $th.classList.add('is-primary')
+            if (column.label) {
+                $th.innerText = column.label
+            } else if (column.custom_label) {
+                $th.innerHTML = column.custom_label
+            } else {
+                $th.innerText = column.name
+            }
+            $tr.appendChild($th)
+        })
+        $thead.appendChild($tr)
+    }
+
+    populateTableBody($table, records) {
+        let $tbody = $table.querySelector('tbody')
+        $tbody.innerHTML = '';
+
+        records.forEach(record => {
+            let $tr = document.createElement('tr')
+            this.options.columns.forEach(column => {
+                let $td = document.createElement('td')
+                if (column.custom_body) {
+                    $td.innerHTML = column.custom_body(record, column.name)
+                } else {
+                    $td.innerHTML = record[column.name]
+                }
+                $tr.appendChild($td)
+            })
+            $tbody.appendChild($tr)
+        })
+        if (records.length == 0) {
+            let $tr = document.createElement('tr');
+            $tr.innerHTML = `<td colspan="${this.options.columns.length}" style="text-align:center"><em>No data available.</em></td>`;
+            $tbody.appendChild(tr);
+        }
+    }
+
+    async getApiData(url) {
+        let response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();;
+    }
+
+    refreshTable(term = null) {
+        let url = this.options.data_url
+
+        if (term) {
+            if (url.endsWith('?') === false && url.endsWith('&') === false) {
+                if ('?' in url) {
+                    url += '&'
+                } else {
+                    url += '?'
+                }
+            }
+            url += 'search=' + term
+        }
+
+        this.getApiData(url).then(data => {
+            console.log('api results', data);
+            this.populateTableBody(this.$table, data.records);
+            //this.createPagination('palm-table', data);
+        }).catch(error => {
+            console.error(error);
+        });
+    }
+
+    createPagination(options) {
+        const $template = document.querySelector('#table-pagination-template')
+        let clone = $template.content.cloneNode(true);
+
+        if (this.$template === null) {
+            console.error('Pagination template not found. Did you forget to include the html template?')
+            throw new Error('Pagination template not found.')
+        }
+    }
+
+
+}
+
+
 
 function refreshTable(term, meta) {
     let url = 'http://localhost:5000/api/palm?search='

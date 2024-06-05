@@ -12,6 +12,14 @@ import sqlite3
 
 app = Flask(__name__)
 CORS(app)
+
+# put this sippet ahead of all your bluprints
+@app.after_request 
+def after_request(response):
+    header = response.headers
+    header['Access-Control-Allow-Origin'] = '*'
+    return response
+
 app.config['Database'] = './palmhardiness.db'
 
 app.register_blueprint(palm_web.web, url_prefix='/palm')

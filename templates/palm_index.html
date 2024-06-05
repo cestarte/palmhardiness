@@ -9,7 +9,9 @@
 </section>
 {% endblock %}
 {% block content %}
+{% include 'vanilla_table.html' %}
 
+<div class="table-container mb-0" id="table-placeholder"></div>
 
 
 <div class="grid mb-1">
@@ -149,7 +151,7 @@
         </ul>
 </template>
 
-<script src="{{ url_for('static', filename='js/table.js') }}"></script>
+<script src="{{ url_for('static', filename='js/vanilla_table.js') }}"></script>
 <script>
     window.onload = function () {
         document.getElementById('search-input').addEventListener('input', function (e) {
@@ -158,6 +160,75 @@
 
         // initial table population
         refreshTable(null, { 'page': 1, 'results_per_page': 15 });
+
+        let options = {
+            'parent_elem_id': 'table-placeholder',
+            'pagination': 'pagination-placeholder',
+            'pagination_template': 'table-pagination',
+            'data_url': 'http://localhost:5000/api/palm',
+            'search': '',
+            'filters': '',
+            'sort': '',
+            'order': '',
+            'zone': '',
+            'page': 1,
+            'results_per_page': 15,
+            'columns': [
+                {
+                    'name': 'id',
+                    'label': ' ',
+                    'custom_body': function (record) {
+                        return `<a href="/palm/${record['id']}" aria-label="Go to palm" title="Go to palm">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </a>`
+                    }
+                },
+                {
+                    'name': 'genus',
+                    'label': 'Genus'
+                },
+                {
+                    'name': 'species',
+                    'label': 'Species'
+                },
+                {
+                    'name': 'variety',
+                    'label': 'Variety'
+                },
+                {
+                    'name': 'common_name',
+                    'label': 'Common Name'
+                },
+                {
+                    'name': 'zone_name',
+                    'custom_label': `                   
+                    <div class="dropdown is-hoverable">
+                        <div class="dropdown-trigger">
+                            Zone <i class="fa-solid fa-circle-info is-size-7" aria-haspopup="true"
+                                aria-controls="zone-help"></i>
+                        </div>
+                        <div class="dropdown-menu" id="zone-help" role="menu">
+                            <div class="dropdown-content">
+                                <div class="dropdown-item is-size-7 has-text-weight-normal">
+                                    <p>USDA Hardiness Zones are based on the average annual minimum
+                                        temperature.</p>
+                                    <a target="_blank" href="https://planthardiness.ars.usda.gov/"> <i
+                                            class="fa-solid fa-arrow-up-right-from-square"></i> More info at
+                                        usda.gov</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`
+                },
+                {
+                    'name': 'observation_count',
+                    'label': 'Observation Count'
+                }
+            ]
+        }
+        let vanilla = new VanillaTable(options)
+        vanilla.createTable()
+        vanilla.refreshTable()
     }
 </script>
 
