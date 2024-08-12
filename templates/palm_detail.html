@@ -13,44 +13,41 @@
 {% endblock %}
 {% block content %}
 
-{% include 'modal.html' %}
 
-<div class="columns">
 
-    <div class="column is-half">
-        <div class="dropdown is-hoverable">
-            <div class="dropdown-trigger">
-                <p><strong>USDA Zone</strong> <i class="fa-solid fa-circle-info is-size-7" aria-haspopup="true"
-                        aria-controls="zone-help"></i></p>
-            </div>
-            <div class="dropdown-menu" id="zone-help" role="menu">
-                <div class="dropdown-content">
-                    <div class="dropdown-item is-size-7 has-text-weight-normal">
-                        <p>USDA Hardiness Zones are based on the average annual minimum
-                            temperature.</p>
-                        <a target="_blank" href="https://planthardiness.ars.usda.gov/"> <i
-                                class="fa-solid fa-arrow-up-right-from-square"></i> More info at
-                            usda.gov</a>
-                    </div>
-                </div>
-            </div> <span class="ml-2">{{data.zone_name}}</span>
+<div class="box">
+
+    <div class="dropdown is-hoverable">
+        <div class="dropdown-trigger">
+            <p><strong>USDA Zone</strong> <i class="fa-solid fa-circle-info is-size-7" aria-haspopup="true"
+                    aria-controls="zone-help"></i></p>
         </div>
+        <div class="dropdown-menu" id="zone-help" role="menu">
+            <div class="dropdown-content">
+                <div class="dropdown-item is-size-7 has-text-weight-normal">
+                    <p>USDA Hardiness Zones are based on the average annual minimum
+                        temperature.</p>
+                    <a target="_blank" href="https://planthardiness.ars.usda.gov/"> <i
+                            class="fa-solid fa-arrow-up-right-from-square"></i> More info at
+                        usda.gov</a>
+                </div>
+            </div>
+        </div> <span class="ml-2">{{data.zone_name}}</span>
     </div>
 
-    <div class="column is-half">
-        <p class="is-pulled-right">
-            <a target="_blank"
-                href="https://www.palmtalk.org/forum/search/?&q=%22{{data.palm_name}}%22&quick=1&search_and_or=or&sortby=relevancy">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmTalk</a>
-        </p>
+    &nbsp;
 
-        <a target="_blank" href="https://palmpedia.net/wiki/index.php5?search={{data.palm_name}}">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmPedia</a></p>
-    </div>
+    <a target="_blank"
+        href="https://www.palmtalk.org/forum/search/?&q=%22{{data.palm_name}}%22&quick=1&search_and_or=or&sortby=relevancy">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmTalk</a>
+    &nbsp;
+
+    <a target="_blank" href="https://palmpedia.net/wiki/index.php5?search={{data.palm_name}}">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmPedia</a></p>
 </div>
 
-<div class="table-container mb-0">
-    <table class="table is-striped is-fullwidth" id="observation-table">
+<div class="table-container mb-0" id="observation-table">
+    <!-- <table class="table is-striped is-fullwidth" id="observation-table">
         <thead>
             <tr class="is-primary">
                 <th>Location</th>
@@ -66,7 +63,7 @@
         <tbody>
 
         </tbody>
-    </table>
+    </table> -->
 </div>
 
 <template id="observation-temp">
@@ -87,78 +84,103 @@
     </div>
 </template>
 
+<script src="{{ url_for('static', filename='js/vanilla_table.js') }}"></script>
 <script>
-    var uniqueElemCounter = 0
+    async function getObservationsAsync() {
+        try {
+            const response = await fetch('/api/palm/{{data.id}}/observations')
+            if (!response.ok) {
+                throw new Error('Network response was not OK.', response)
+            }
 
-    window.onload = function () {
-        getObservations()
-        testelem = document.getElementById('test')
-        console.log('list', testelem.classList)
-        createModal(testelem, "HEADER", "BODY", "FOOTER")
-    }
+            const contentType = response.headers.get("content-type")
+            if (!contentType || !contentType.includes("application/json"))
+                throw new TypeError('Expected JSON response but got something else.')
 
-    function getObservations() {
-        fetch('/api/palm/{{data.id}}/observations')
-            .then(response => response.json())
-            .then(data => {
-                console.log(data)
-                const table = document.getElementById('observation-table').getElementsByTagName('tbody')[0]
-                data.forEach(o => {
-                    let row = table.insertRow(-1)
-                    let location = row.insertCell(0)
-                    let low_temp = row.insertCell(1)
-                    let damage = row.insertCell(2)
-                    let description = row.insertCell(3)
-                    let event_name = row.insertCell(4)
-                    let event_description = row.insertCell(5)
-                    let event_reported_by = row.insertCell(6)
-                    let source = row.insertCell(7)
-                    location.innerHTML = o.location || ''
-                    //low_temp.innerHTML = o.low_temp || ''
-                    temperatureDropdown(low_temp, o.low_temp)
-                    damage.innerHTML = o.damage_text || ''
-                    longTextModalTrigger(description, o.description, 100)
-                    event_name.innerHTML = o.event_name || ''
-                    longTextModalTrigger(event_description, o.event_description, 100, o.event_name || null)
-                    event_reported_by.innerHTML = o.event_who_reported || ''
-                    source.innerHTML = `<a href="${o.source}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> ${o.source}</a>`
-                })
-            })
-    }
-
-    function temperatureDropdown(targetElem, f) {
-        if (!targetElem || !f) {
-            return
+            return response.json()
+        } catch (error) {
+            console.error('Failed to fetch the observation data.', error)
+            return []
         }
-
-        // directly affects the DOM by inserting a temperature dropdown into the targetElem
-        id = `temperature-${uniqueElemCounter++}`
-        const clone = document.getElementById('observation-temp').content.cloneNode(true)
-        let popupTriggerElem = clone.querySelector('[aria-haspopup="true"]')
-        popupTriggerElem.setAttribute('aria-controls', id)
-        let dropdownMenu = clone.querySelector('[id="observation-temp-dropdown"]')
-        dropdownMenu.setAttribute('id', id)
-        clone.querySelectorAll('[name="f"]').forEach(elem => { elem.innerHTML = f })
-        clone.querySelector('[name="c"]').innerHTML = ((f - 32) * 5 / 9).toFixed(2)
-        targetElem.appendChild(clone)
     }
 
-    function longTextModalTrigger(triggerElem, text, maxLength, title = null) {
-        // directly affects the DOM element 
-
-        if (!text) {
-            triggerElem.innerHTML = ''
-            return
-        } else if (text.length <= maxLength) {
-            triggerElem.innerHTML = text
-            return
+    window.onload = async function () {
+        let options = {
+            'table_placeholder': 'observation-table',
+            'columns': [
+                {
+                    'name': 'location',
+                    'label': 'Location',
+                },
+                {
+                    'name': 'low_temp',
+                    'label': 'Low Temp',
+                    'custom_body': (record, columnName, $cell) => {
+                        const id = VanillaTable.generateId()
+                        let $elem = document.createElement('div')
+                        $elem.innerHTML = `
+<div class="dropdown is-up">
+  <div class="dropdown-trigger">
+    <button type="button" class="button" aria-haspopup="true" aria-controls="${id}">
+    ${record[columnName]} °F<br />
+    ${((record[columnName] - 32) * 5 / 9).toFixed(2)} °C
+  </button>
+  <div class="dropdown-menu" id="${id}" role="menu">
+    <div class="dropdown-content">
+      <div class="dropdown-item">
+        <p>
+    ${record[columnName]} °F<br />
+    ${((record[columnName] - 32) * 5 / 9).toFixed(2)} °C
+        </p>
+      </div>
+    </div>
+  </div>
+</div>`
+                        return $elem
+                    }
+                },
+                {
+                    'name': 'damage_text',
+                    'label': 'Damage'
+                },
+                {
+                    'name': 'description',
+                    'label': 'Description',
+                    'formatters': ['max_len', 'text'],
+                    'on_click': (record, columnName, $cell) => {
+                        if (record[columnName] && record[columnName].length > 100)
+                            createModal(null, '', record[columnName], '')
+                    }
+                },
+                {
+                    'name': 'event_name',
+                    'label': 'Event Name',
+                },
+                {
+                    'name': 'event_description',
+                    'label': 'Event Description',
+                    'formatters': ['max_len', 'text'],
+                    'on_click': (record, columnName, $cell) => {
+                        if (record[columnName] && record[columnName].length > 100)
+                            createModal(null, record['event_name'], record[columnName], '')
+                    }
+                },
+                {
+                    'name': 'event_who_reported',
+                    'label': 'Event Reported By'
+                },
+                {
+                    'name': 'source',
+                    'label': 'Source',
+                    'custom_body': (record, columnName) => {
+                        return `<a href="${record.source}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> ${record.source}</a>`
+                    }
+                }
+            ]
         }
-
-        let preview_text = text.substr(0, maxLength) + '...'
-        triggerElem.setAttribute('data-modal-id', `longtext-${uniqueElemCounter++}`)
-        triggerElem.innerHTML = preview_text
-        let modal_content = `${text.replace('\n', '<br /><br />')}`
-        createModal(triggerElem, title, modal_content)
+        let vanilla = new VanillaTable(options)
+        let observations = await getObservationsAsync()
+        vanilla.populateTableBody(observations)
     }
 </script>
 
