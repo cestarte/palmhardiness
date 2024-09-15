@@ -11,27 +11,52 @@
 {% block content %}
 
 <div class="mb-1" id="table-search-placeholder"></div>
-<div class="table-container mb-0" id="table-placeholder"></div>
+<div class="mb-0" id="table-placeholder"></div>
 <div class=" mt-4" id="table-pagination-placeholder"></div>
 
 <script src="{{ url_for('static', filename='js/vanilla_table.js') }}"></script>
 <script>
-    async function getPalms() {
-        async function getObservationsAsync() {
-            try {
-                const response = await fetch('/api/palm/')
-                if (!response.ok) {
-                    throw new Error('Network response was not OK.', response)
-                }
+    let vanilla = null
 
-                const contentType = response.headers.get("content-type")
-                if (!contentType || !contentType.includes("application/json"))
-                    throw new TypeError('Expected JSON response but got something else.')
+    async function onPerformSearch() {
+        const $input = document.querySelector('input[type="text"][name="search-input"]')
+        const term = $input.value
+        let observations = await getObservations(term)
+        vanilla.populateTableBody(observations.records)
+        vanilla.createPagination(observations.meta)
+    }
 
-                return response.json()
-            } catch (error) {
-                console.error('Failed to fetch the observation data.', error)
-                return []
+    async function getObservations(term) {
+        let url = '/api/palm/'
+
+        if (term && typeof term === 'string') {
+            url = `/api/palm/?search=${term}`
+        }
+
+        try {
+            const response = await fetch(url)
+            if (!response.ok) {
+                throw new Error('Network response was not OK.', response)
+            }
+
+            const contentType = response.headers.get("content-type")
+            if (!contentType || !contentType.includes("application/json"))
+                throw new TypeError('Expected JSON response but got something else.')
+            return await response.json()
+        } catch (error) {
+            console.error('Failed to fetch the observation data.', error)
+            return {
+                'meta': {
+                    'has_next_page': false,
+                    'has_previous_page': false,
+                    'offset': 0,
+                    'page': 1,
+                    'results_on_this_page': 0,
+                    'results_per_page': 15,
+                    'total_pages': 1,
+                    'total_results': 0
+                },
+                'records': []
             }
         }
     }
@@ -41,8 +66,8 @@
             'table_placeholder': 'table-placeholder',
             'pagination_elem_id': 'table-pagination-placeholder',
             'search_elem_id': 'table-search-placeholder',
-            'data_url': 'http://localhost:5000/api/palm',
             'has_search': true,
+            'on_search': onPerformSearch,
             'has_pagination': true,
             'columns': [
                 {
@@ -120,12 +145,10 @@
                 }
             ]
         }
-        let vanilla = new VanillaTable(options)
-        //vanilla.insertTemplates()
-        //vanilla.createTable()
-        //vanilla.refreshTable()
-        let records = await getPalms()
-        vanilla.populateTableBody(records)
+        vanilla = new VanillaTable(options)
+        let observations = await getObservations()
+        vanilla.populateTableBody(observations.records)
+        vanilla.createPagination(observations.meta)
     }
 </script>
 

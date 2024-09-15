@@ -2,7 +2,7 @@ var vanillaTableUnique = 0;
 
 class VanillaTable {
     constructor(options) {
-        this.debug = true
+        this.debug = false
         this.FORMATTER_MAX_LEN = 100
 
         if (this.debug)
@@ -21,6 +21,8 @@ class VanillaTable {
 
         this.insertTemplates()
         this.createTable()
+        this.createPagination()
+        this.createSearch()
     }
 
     insertTemplates() {
@@ -277,24 +279,28 @@ class VanillaTable {
                 e.preventDefault()
             }
         }, false)
-        document.removeEventListener("keyup", (e) => this.onDocumentKeyUp(e), true)
-        // (re)apply key listeners to the document
-        document.addEventListener("keyup", (e) => this.onDocumentKeyUp(e), true)
 
-        this.$table.addEventListener("click", (e) => {
-            let row = e.target.getAttribute('data-row')
-            let col = e.target.getAttribute('data-col')
-            //console.log(`Click on row: ${row}, col: ${col}.`)
-            this.setSelectedCell(row, col)
-        })
+        if (this.options.has_keyboard_nav) {
+            // (re)apply key listeners to the document
+            document.removeEventListener("keyup", (e) => this.onDocumentKeyUp(e), true)
+            document.addEventListener("keyup", (e) => this.onDocumentKeyUp(e), true)
+
+            // click event selects the cell
+            this.$table.addEventListener("click", (e) => {
+                let row = e.target.getAttribute('data-row')
+                let col = e.target.getAttribute('data-col')
+                //console.log(`Click on row: ${row}, col: ${col}.`)
+                this.setSelectedCell(row, col)
+            })
+        }
 
         if (this.options.has_search) {
             this.createSearch(this.options)
         }
     }
 
+    /** Populates the table header with the given columns.  */
     populateTableHeader(columns) {
-        // Populates the table header with the given columns.
         if (this.debug)
             console.log('VanillaTable.populateTableHeader', columns)
 
@@ -315,8 +321,8 @@ class VanillaTable {
         $thead.appendChild($tr)
     }
 
+    /** Populates the table body with the given records. */
     populateTableBody(records = []) {
-        // Populates the table body with the given records.
         if (this.debug)
             console.log('VanillaTable.populateTableBody', records)
 
@@ -364,14 +370,20 @@ class VanillaTable {
                     // There is a custom body and there are no formatters specified.
                     // The custom body can be a string, HTMLElement, or function which returns HTML string
                     if (column.custom_body instanceof HTMLElement) {
-                        console.log('custom_body is HTMLElement')
+                        //console.log('custom_body is HTMLElement')
                         $td.appendChild(column.custom_body)
                     } else if (typeof column.custom_body === 'function') {
-                        console.log('custom_body is function')
-                        const $elem = column.custom_body(record, column.name, $td)
-                        $td.append($elem)
+                        //console.log('custom_body is function')
+                        const html = column.custom_body(record, column.name, $td)
+                        if (html instanceof HTMLElement) {
+                            $td.appendChild(html)
+                        } else if (typeof html === 'string') {
+                            $td.innerHTML = html
+                        } else {
+                            throw new Error('custom_body function must return an HTMLElement or string.')
+                        }
                     } else {
-                        console.log('custom_body is string')
+                        //console.log('custom_body is string')
                         $td.innerHTML = column.custom_body
                     }
                 } else if (!column.custom_body && column.formatters && column.formatters.length > 0) {
@@ -458,55 +470,15 @@ class VanillaTable {
         },
     }
 
-    // async getApiData(url) {
-    //     if (this.debug)
-    //         console.log('VanillaTable.getApiData', url)
+    refreshTable(meta, results) {
+        if (this.debug)
+            console.log('VanillaTable.refreshTable')
 
-    //     let response = await fetch(url);
-    //     if (!response.ok) {
-    //         throw new Error(`HTTP error! status: ${response.status}`);
-    //     }
-    //     return await response.json()
-    // }
-
-    // refreshTable(term, meta = {}) {
-    //     if (this.debug)
-    //         console.log('VanillaTable.refreshTable', term, meta)
-
-    //     let url = this.options.data_url
-
-    //     if (term) {
-    //         if (url.endsWith('?') === false && url.endsWith('&') === false) {
-    //             if (url.includes('?') === true) {
-    //                 url += '&'
-    //             } else {
-    //                 url += '?'
-    //             }
-    //         }
-    //         url += 'search=' + term
-    //     }
-
-    //     for (let key in meta) {
-    //         if (url.includes('?') === false) {
-    //             url += `?${key}=${meta[key]}`
-    //         } else {
-    //             url += `&${key}=${meta[key]}`
-    //         }
-    //     }
-
-    //     if (this.options.custom_url_builder) {
-    //         url = this.options.custom_url_builder(url)
-    //     }
-
-    //     this.getApiData(url).then(data => {
-    //         this.populateTableBody(this.$table, data.records)
-    //         if (this.has_pagination) {
-    //             this.createPagination(data)
-    //         }
-    //     }).catch(error => {
-    //         console.error(error)
-    //     });
-    // }
+        if (this.meta && this.meta.search)
+            this.$searchInput.value = meta.search
+        this.createPagination(meta, results)
+        this.populateTableBody(results)
+    }
 
     createPagination(data, options = null) {
         if (this.debug)
@@ -523,17 +495,17 @@ class VanillaTable {
         const $placeholder = document.getElementById(options.pagination_elem_id)
 
         if (this.$template === null) {
-            console.error('Pagination template not found. Did you forget to include the html template?')
+            console.error('VanillaTable.createPagination Pagination template not found. Did you forget to include the html template?')
             throw new Error('Pagination template not found.')
         }
 
         if ($placeholder === null) {
-            console.error('Pagination placeholder element not found.', options.pagination_elem_id)
+            console.error('VanillaTable.createPagination Pagination placeholder element not found.', options.pagination_elem_id)
             throw new Error('Pagination placeholder element not found.')
         }
 
         if (!data || !data.meta) {
-            console.error('No data or meta information found.')
+            console.error('VanillaTable.createPagination No data or meta information found.')
             $placeholder.innerHTML = ''
             return
         }
@@ -655,8 +627,6 @@ class VanillaTable {
         };
     }
 
-    processSearch = this.debounce((term) => this.refreshTable(term))
+    processSearch = this.debounce((term) => this.options.on_search())
     handleEdit = this.debounce((name, oldValue, newValue, row, col, fn) => fn(name, oldValue, newValue, row, col))
 }
-
-// refreshTable(null, { 'page': 1, 'results_per_page': 15 })
