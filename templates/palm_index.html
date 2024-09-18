@@ -7,30 +7,52 @@
         <p class="subtitle"></p>
     </div>
 </section>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index_table.css') }}">
 {% endblock %}
 {% block content %}
 
-<div class="mb-1" id="table-search-placeholder"></div>
-<div class="mb-0" id="table-placeholder"></div>
-<div class=" mt-4" id="table-pagination-placeholder"></div>
+
+
+<div id="table-placeholder"></div>
 
 <script src="{{ url_for('static', filename='js/vanilla_table.js') }}"></script>
 <script>
     let vanilla = null
 
-    async function onPerformSearch() {
-        const $input = document.querySelector('input[type="text"][name="search-input"]')
-        const term = $input.value
+    async function onSearch(term) {
         let observations = await getObservations(term)
-        vanilla.populateTableBody(observations.records)
-        vanilla.createPagination(observations.meta)
+        vanilla.refreshTable(observations)
     }
 
-    async function getObservations(term) {
+    async function getObservations(meta) {
+        // localhost:5000/api/palm/?offset=0&page=2&results_per_page=15
         let url = '/api/palm/'
 
-        if (term && typeof term === 'string') {
-            url = `/api/palm/?search=${term}`
+        // If the only thing supplied is a string, 
+        // it is a search term.
+        if (meta && typeof meta === 'string') {
+            url += `?search=${meta}`
+        }
+
+        // If instead we were supplied with an object, 
+        // it may have multiple query parameters.
+        if (meta && typeof meta === 'object') {
+            let isFirstAddon = true
+
+            if (meta.search && typeof meta.search === 'string') {
+                url += `?search=${meta.search}`
+                isFirstAddon = false
+            }
+
+            for (const [key, value] of Object.entries(meta)) {
+                if (key === 'search')
+                    continue
+                if (isFirstAddon) {
+                    url += `?${key}=${value}`
+                    isFirstAddon = false
+                } else
+                    url += `&${key}=${value}`
+            }
         }
 
         try {
@@ -61,14 +83,23 @@
         }
     }
 
+    async function onGoToPage(e, meta) {
+        //console.log('onGoToPage', meta)
+        if (!meta) {
+            console.log('onGoToPage: meta is missing. Cannot proceed.')
+            return
+        }
+
+        return await getObservations(meta)
+    }
+
     window.onload = async function () {
         let options = {
             'table_placeholder': 'table-placeholder',
-            'pagination_elem_id': 'table-pagination-placeholder',
-            'search_elem_id': 'table-search-placeholder',
             'has_search': true,
-            'on_search': onPerformSearch,
+            'on_search': onSearch,
             'has_pagination': true,
+            'on_go_to_page': onGoToPage,
             'columns': [
                 {
                     'name': 'id',
@@ -147,8 +178,7 @@
         }
         vanilla = new VanillaTable(options)
         let observations = await getObservations()
-        vanilla.populateTableBody(observations.records)
-        vanilla.createPagination(observations.meta)
+        vanilla.refreshTable(observations)
     }
 </script>
 

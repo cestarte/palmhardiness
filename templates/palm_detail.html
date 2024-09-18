@@ -118,24 +118,10 @@
                     'custom_body': (record, columnName, $cell) => {
                         const id = VanillaTable.generateId()
                         let $elem = document.createElement('div')
-                        $elem.innerHTML = `
-<div class="dropdown is-up">
-  <div class="dropdown-trigger">
-    <button type="button" class="button" aria-haspopup="true" aria-controls="${id}">
-    ${record[columnName]} °F<br />
-    ${((record[columnName] - 32) * 5 / 9).toFixed(2)} °C
-  </button>
-  <div class="dropdown-menu" id="${id}" role="menu">
-    <div class="dropdown-content">
-      <div class="dropdown-item">
-        <p>
-    ${record[columnName]} °F<br />
-    ${((record[columnName] - 32) * 5 / 9).toFixed(2)} °C
-        </p>
-      </div>
-    </div>
-  </div>
-</div>`
+                        $elem.innerHTML = `<p>
+${record[columnName]}&nbsp°F</p><p>
+${((record[columnName] - 32) * 5 / 9).toFixed(2)}&nbsp°C
+</p>`
                         return $elem
                     }
                 },

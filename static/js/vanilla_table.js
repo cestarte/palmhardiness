@@ -16,13 +16,12 @@ class VanillaTable {
         }
 
         this.$table = null
-        this.pagination = null
         this.$selectedCell = null
 
         this.insertTemplates()
         this.createTable()
-        this.createPagination()
-        this.createSearch()
+        if (this.options && this.options.has_search)
+            this.createSearch()
     }
 
     insertTemplates() {
@@ -39,45 +38,7 @@ class VanillaTable {
                 </table>
             </template>
         `
-
-        const tablePaginationTemplate = `
-            <template id="table-pagination-template">
-                <p class="mt-1">
-                    Page <span name="current-page"></span> of <span name="total_pages"></span>.
-                    Showing <span name="results_on_this_page"></span> of <span name="total_results"></span> results.
-                </p>
-                <nav class="pagination" role="navigation" aria-label="pagination">
-                    <a href="#" class="pagination-previous">Previous</a>
-                    <a href="#" class="pagination-next">Next page</a>
-
-                    <ul class="pagination-list">
-                        <li>
-                            <input type="input" type="number" class="input" value="" name="page-input" size="3" />
-                        </li>
-                        <li>
-                            <a href="#" class="pagination-link" name="go" aria-label="Go to page">Go</a>
-                        </li>
-                    </ul>
-            </template>
-        `
-
-        const tableSearchTemplate = `
-            <template id="table-search-template">
-                <div class="grid mb-1">
-                    <div class="cell">
-                    </div>
-                    <div class="cell">
-                    </div>
-                    <div class="cell">
-                        <input type="text" name="search-input" class="input" placeholder="Search..." value="" />
-                    </div>
-                </div>
-            </template>
-        `
-
         document.body.insertAdjacentHTML("beforeEnd", tableTemplate)
-        document.body.insertAdjacentHTML("beforeEnd", tablePaginationTemplate)
-        document.body.insertAdjacentHTML("beforeEnd", tableSearchTemplate)
     }
 
     setSelectedCellByElem($cell) {
@@ -102,7 +63,7 @@ class VanillaTable {
         // Special rule: if the row, col is 0,0 it means to remove the selection
         if (row === 0 && col === 0) {
             if ($prevCell) {
-                $prevCell.classList.remove('has-background-info-light')
+                $prevCell.classList.remove('has-background-primary')
                 this.$selectedCell = null
             }
             return
@@ -112,10 +73,10 @@ class VanillaTable {
         // Note: row,col are not necessarily numbers. Don't use parseInt
         let $td = this.$table.querySelector(`td[data-row="${row}"][data-col="${col}"]`)
         if ($td) {
-            $td.classList.add('has-background-info-light')
+            $td.classList.add('has-background-primary')
             this.$selectedCell = $td
             if ($prevCell) {
-                $prevCell.classList.remove('has-background-info-light')
+                $prevCell.classList.remove('has-background-primary')
             }
         } else {
             console.error(`setSelectedCell: cell at row: ${row}, col: ${col} not found.`)
@@ -270,8 +231,7 @@ class VanillaTable {
         this.$table = this.$placeholder.querySelector('table')
 
         this.populateTableHeader(options.columns)
-        this.populateTableBody(options.data)
-
+        this.populateTableBody()
 
         // prevent key listeners from interfering with the table
         window.addEventListener("keydown", (e) => {
@@ -328,6 +288,11 @@ class VanillaTable {
 
         let $tbody = this.$table.querySelector('tbody')
         $tbody.innerHTML = '';
+
+        if (!records) {
+            console.error('VanillaTable.populateTableBody: No records provided.')
+            return
+        }
 
         let row = 0
         records.forEach(record => {
@@ -470,103 +435,137 @@ class VanillaTable {
         },
     }
 
-    refreshTable(meta, results) {
+    refreshTable(observations) {
         if (this.debug)
-            console.log('VanillaTable.refreshTable')
+            console.log('VanillaTable.refreshTable', observations)
+        if (!observations || !observations.meta || !observations.records) {
+            console.error('VanillaTable.refreshTable: No observations provided.')
+            return
+        }
 
-        if (this.meta && this.meta.search)
-            this.$searchInput.value = meta.search
-        this.createPagination(meta, results)
-        this.populateTableBody(results)
+        // populate search
+        //if (observations.meta.search)
+        //    this.$searchInput.value = meta.search
+
+        // populate pagination
+        if (this.options.has_pagination)
+            this.createPagination(observations.meta)
+
+        this.populateTableBody(observations.records)
     }
 
-    createPagination(data, options = null) {
+    createPagination(meta) {
         if (this.debug)
-            console.log('VanillaTable.createPagination', data, options)
+            console.log('VanillaTable.createPagination', meta)
 
-        if (options === null) {
-            options = this.options
+        if (!this.options || !this.options.has_pagination) {
+            return
         }
-        if (!options || !options.has_pagination) {
+        if (!meta) {
+            console.error('VanillaTable.createPagination No meta information supplied.')
             return
         }
 
-        const $template = document.querySelector('#table-pagination-template')
-        const $placeholder = document.getElementById(options.pagination_elem_id)
-
-        if (this.$template === null) {
-            console.error('VanillaTable.createPagination Pagination template not found. Did you forget to include the html template?')
-            throw new Error('Pagination template not found.')
+        // Does pagination already exist? 
+        let $container = this.$table.parentElement.querySelector('.pagination-container')
+        const containerExists = $container !== null
+        // ...or do we need to create it?
+        if (!containerExists) {
+            $container = document.createElement('div')
+            $container.classList.add('pagination-container')
         }
 
-        if ($placeholder === null) {
-            console.error('VanillaTable.createPagination Pagination placeholder element not found.', options.pagination_elem_id)
-            throw new Error('Pagination placeholder element not found.')
+        // Either way, populate it fresh
+        $container.innerHTML = `
+        <p class="mt-1 is-size-7">
+            Page <span name="current-page"></span> of <span name="total_pages"></span>.
+            Showing <span name="results_on_this_page"></span> of <span name="total_results"></span> results.
+        </p>
+        <nav class="pagination is-small" role="navigation" aria-label="pagination">
+            <a class="pagination-previous">Previous</a>
+            <a class="pagination-next">Next page</a>
+
+            <ul class="pagination-list">
+                <li>
+                    <input type="number" min="1" max="${meta.total_pages}" class="input is-small" value="" name="page-input" size="3" />
+                </li>
+                <li>
+                    <a class="pagination-link" name="go" aria-label="Go to page">Go</a>
+                </li>
+            </ul>
+        </nav>
+        `
+
+        let $currentPage = $container.querySelector('[name="current-page"]')
+        let $pageInput = $container.querySelector('[name="page-input"]')
+        let $goButton = $container.querySelector('[name="go"]')
+        let $totalPages = $container.querySelector('[name="total_pages"]')
+        let $resultsOnThisPage = $container.querySelector('[name="results_on_this_page"]')
+        let $totalResults = $container.querySelector('[name="total_results"]')
+        let $nextPage = $container.querySelector('.pagination-next')
+        let $prevPage = $container.querySelector('.pagination-previous')
+
+        $currentPage.innerText = meta.page
+        $pageInput.value = meta.page
+        $totalPages.innerText = meta.total_pages
+        $resultsOnThisPage.innerText = meta.results_on_this_page
+        $totalResults.innerText = meta.total_results
+
+        let callGoToPageHandler = async (e, page) => {
+            if (page > 0 && page <= meta.total_pages) {
+                meta.page = page
+                let result = await this.options.on_go_to_page(e, meta)
+                this.refreshTable(result)
+            }
         }
 
-        if (!data || !data.meta) {
-            console.error('VanillaTable.createPagination No data or meta information found.')
-            $placeholder.innerHTML = ''
-            return
-        }
-
-        let clone = $template.content.cloneNode(true)
-        let $currentPage = clone.querySelector('[name="current-page"]')
-        let $pageInput = clone.querySelector('[name="page-input"]')
-        let $goButton = clone.querySelector('[name="go"]')
-        let $totalPages = clone.querySelector('[name="total_pages"]')
-        let $resultsOnThisPage = clone.querySelector('[name="results_on_this_page"]')
-        let $totalResults = clone.querySelector('[name="total_results"]')
-        let $nextPage = clone.querySelector('.pagination-next')
-        let $prevPage = clone.querySelector('.pagination-previous')
-
-        $currentPage.innerText = data.meta.page
-        $pageInput.value = data.meta.page
-        $totalPages.innerText = data.meta.total_pages
-        $resultsOnThisPage.innerText = data.meta.results_on_this_page
-        $totalResults.innerText = data.meta.total_results
-
-        let self = this
         // If only 1 page, disable the prev button
-        if (data.meta.page <= 1) {
+        if (meta.page <= 1) {
             $prevPage.setAttribute('disabled', '')
         } else {
             // ... otherwise, wire up the prev button
-            $prevPage.addEventListener('click', function (e) {
-                e.preventDefault()
-                self.refreshTable(data.meta.search, { 'page': data.meta.page - 1, 'results_per_page': data.meta.results_per_page })
-            });
-        }
-
-        // If at the last page, disable the next button
-        if (data.meta.page == data.meta.total_pages) {
-            $nextPage.setAttribute('disabled', '')
-        } else {
-            // ...otherwise, wire up the next button
-            $nextPage.addEventListener('click', function (e) {
-                e.preventDefault()
-                self.refreshTable(data.meta.search, { 'page': data.meta.page + 1, 'results_per_page': data.meta.results_per_page })
-            });
-        }
-
-        // If only 1 page, disable the input
-        if (data.meta.total_pages <= 1) {
-            $pageInput.setAttribute('disabled', '')
-            $goButton.setAttribute('disabled', '')
-        } else {
-            // ...otherwise, wire up the go button
-            $goButton.addEventListener('click', function (e) {
-                e.preventDefault()
-                let page = parseInt($pageInput.value)
-                if (page > 0 && page <= data.meta.total_pages) {
-                    self.refreshTable(data.meta.search, { 'page': page, 'results_per_page': data.meta.results_per_page });
+            $prevPage.addEventListener('click', async (e) => {
+                const page = parseInt($pageInput.value)
+                if (page === NaN) {
+                    console.error('Page input is not a number.', $pageInput.value)
+                    return
                 }
+                await callGoToPageHandler(e, page - 1)
             })
         }
 
-        $placeholder.innerHTML = ''
-        $placeholder.appendChild(clone)
+        // If at the last page, disable the next button
+        if (meta.page == meta.total_pages) {
+            $nextPage.setAttribute('disabled', '')
+        } else {
+            // ...otherwise, wire up the next button
+            $nextPage.addEventListener('click', async (e) => {
+                const page = parseInt($pageInput.value)
+                if (page === NaN) {
+                    console.error('Page input is not a number.', $pageInput.value)
+                    return
+                }
+                await callGoToPageHandler(e, page + 1)
+            })
+        }
 
+        // If only 1 page, disable the input
+        if (meta.total_pages <= 1) {
+            $pageInput.setAttribute('disabled', '')
+            $goButton.setAttribute('disabled', '')
+        } else {
+            $goButton.addEventListener('click', async (e) => {
+                const page = parseInt($pageInput.value)
+                if (page === NaN) {
+                    console.error('Page input is not a number.', $pageInput.value)
+                    return
+                }
+                await callGoToPageHandler(e, page)
+            })
+        }
+
+        if (!containerExists)
+            this.$table.parentElement.appendChild($container)
     }
 
     createSearch(options) {
@@ -580,21 +579,19 @@ class VanillaTable {
             return
         }
 
-        const $template = document.querySelector('#table-search-template')
-        const $placeholder = document.getElementById(options.search_elem_id);
-
-        if (this.$template === null) {
-            console.error('Search template not found. Did you forget to include the html template?')
-            throw new Error('Search template not found.')
-        }
-
-        if ($placeholder === null) {
-            console.error('Search placeholder element not found.', options.search_elem_id)
-            throw new Error('Search placeholder element not found.')
-        }
-
-        let clone = $template.content.cloneNode(true)
-        let $searchInput = clone.querySelector('[name="search-input"]')
+        let $template = document.createElement('div')
+        $template.innerHTML = `
+            <div class="grid mb-1">
+                <div class="cell">
+                </div>
+                <div class="cell">
+                </div>
+                <div class="cell">
+                    <input type="text" name="search-input" class="input" placeholder="Search..." value="" />
+                </div>
+            </div>
+        `
+        let $searchInput = $template.querySelector('[name="search-input"]')
 
         let self = this
         $searchInput.addEventListener('input', function (e) {
@@ -602,12 +599,11 @@ class VanillaTable {
         });
 
         if (options.custom_search_addon) {
-            let $customPlaceholder = clone.querySelector('[name="custom-search-addon-placeholder"]')
+            let $customPlaceholder = $template.querySelector('[name="custom-search-addon-placeholder"]')
             options.custom_search_addon($customPlaceholder)
         }
 
-        $placeholder.innerHTML = ''
-        $placeholder.appendChild(clone)
+        this.$table.parentElement.insertBefore($template, this.$table)
     }
 
     static generateId() {
@@ -627,6 +623,6 @@ class VanillaTable {
         };
     }
 
-    processSearch = this.debounce((term) => this.options.on_search())
+    processSearch = this.debounce((term) => this.options.on_search(term))
     handleEdit = this.debounce((name, oldValue, newValue, row, col, fn) => fn(name, oldValue, newValue, row, col))
 }
