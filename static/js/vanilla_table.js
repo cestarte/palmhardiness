@@ -18,27 +18,7 @@ class VanillaTable {
         this.$table = null
         this.$selectedCell = null
 
-        this.insertTemplates()
         this.createTable()
-        if (this.options && this.options.has_search)
-            this.createSearch()
-    }
-
-    insertTemplates() {
-        if (this.debug)
-            console.log('VanilltaTable.insertTemplates')
-
-        const tableTemplate = `
-            <template id="table-template">
-                <table class="table is-striped is-fullwidth" id="observation-table">
-                    <thead>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </template>
-        `
-        document.body.insertAdjacentHTML("beforeEnd", tableTemplate)
     }
 
     setSelectedCellByElem($cell) {
@@ -219,15 +199,16 @@ class VanillaTable {
         if (this.debug)
             console.log('VanillaTable.createTable', options)
 
-        const $template = document.querySelector('#table-template')
-        let clone = $template.content.cloneNode(true);
-
-        if (this.$template === null) {
-            console.error('Table template not found. Did you forget to include the html template?')
-            throw new Error('Table template not found.')
-        }
-
-        this.$placeholder.appendChild(clone)
+        let $tableContainer = document.createElement('div')
+        $tableContainer.innerHTML = `
+            <table class="table is-striped is-fullwidth" id="observation-table">
+                <thead>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        `
+        this.$placeholder.appendChild($tableContainer)
         this.$table = this.$placeholder.querySelector('table')
 
         this.populateTableHeader(options.columns)
@@ -443,10 +424,6 @@ class VanillaTable {
             return
         }
 
-        // populate search
-        //if (observations.meta.search)
-        //    this.$searchInput.value = meta.search
-
         // populate pagination
         if (this.options.has_pagination)
             this.createPagination(observations.meta)
@@ -568,44 +545,6 @@ class VanillaTable {
             this.$table.parentElement.appendChild($container)
     }
 
-    createSearch(options) {
-        if (this.debug)
-            console.log('VanillaTable.createSearch', options)
-
-        if (options === null) {
-            options = this.options
-        }
-        if (!options || !options.has_search) {
-            return
-        }
-
-        let $template = document.createElement('div')
-        $template.innerHTML = `
-            <div class="grid mb-1">
-                <div class="cell">
-                </div>
-                <div class="cell">
-                </div>
-                <div class="cell">
-                    <input type="text" name="search-input" class="input" placeholder="Search..." value="" />
-                </div>
-            </div>
-        `
-        let $searchInput = $template.querySelector('[name="search-input"]')
-
-        let self = this
-        $searchInput.addEventListener('input', function (e) {
-            self.processSearch(this.value)
-        });
-
-        if (options.custom_search_addon) {
-            let $customPlaceholder = $template.querySelector('[name="custom-search-addon-placeholder"]')
-            options.custom_search_addon($customPlaceholder)
-        }
-
-        this.$table.parentElement.insertBefore($template, this.$table)
-    }
-
     static generateId() {
         // borrowed from https://stackoverflow.com/questions/6860853/generate-random-string-for-div-id/6860916#6860916
         function S4() {
@@ -623,6 +562,5 @@ class VanillaTable {
         };
     }
 
-    processSearch = this.debounce((term) => this.options.on_search(term))
     handleEdit = this.debounce((name, oldValue, newValue, row, col, fn) => fn(name, oldValue, newValue, row, col))
 }

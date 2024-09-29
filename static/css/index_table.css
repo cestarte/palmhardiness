@@ -1,0 +1,45 @@
+#observation-table th {
+    white-space: nowrap;
+}
+
+/* id */
+#observation-table th:nth-child(1) {
+    width: 5%;
+    min-width: 1.5rem;
+}
+
+/* genus */
+#observation-table th:nth-child(2) {
+    width: 20%;
+    min-width: 10rem;
+}
+
+/* species */
+#observation-table th:nth-child(3) {
+    width: 20%;
+    min-width: 15rem;
+}
+
+/* variety */
+#observation-table th:nth-child(4) {
+    width: 15%;
+    min-width: 10rem;
+}
+
+/* common name */
+#observation-table th:nth-child(5) {
+    width: 15%;
+    min-width: 10rem;
+}
+
+/* zone */
+#observation-table th:nth-child(6) {
+    width: 5%;
+    min-width: 3rem;
+}
+
+/* observation count */
+#observation-table th:nth-child(7) {
+    width: 10%;
+    min-width: 4rem;
+}

@@ -6,38 +6,44 @@ from data.models.palm import Palm
 queries = {
     "get_count": """
 SELECT COUNT(*) as count
-FROM Palm
+FROM (
+        WITH varCTE AS (SELECT ? AS varFilterObserved, UPPER(?) AS varTerm)
+        SELECT COUNT(*) as ObservationCount
+        FROM Palm, varCTE
+        LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
+        LEFT JOIN PalmObservation ON Palm.Id = PalmObservation.PalmId
+        -- Allow unobserved unless we are filtering them out
+        WHERE (PalmObservation.Id IS NOT NULL OR varFilterObserved = 0)
+        -- If there is a search term, then filter on it
+            AND (varTerm is NULL 
+                OR INSTR(UPPER(Genus), varTerm) > 0 
+                OR INSTR(UPPER(Species), varTerm) > 0 
+                OR INSTR(UPPER(Variety), varTerm) > 0 
+                OR INSTR(UPPER(CommonName), varTerm) > 0
+                OR INSTR(UPPER(Zone.Name), varTerm) > 0
+    )
+    GROUP BY Palm.Id
+)
     """,
 
-
-    "search_count": """
-SELECT COUNT(*) as count
-FROM Palm
-WHERE Genus LIKE ? OR Species LIKE ? OR Variety LIKE ? OR CommonName LIKE ?
-    """,
-
-
-    "get_all": """
+    "get_records": """
+WITH varCTE AS (SELECT ? AS varFilterObserved, UPPER(?) AS varTerm)
 SELECT Palm.*
     ,Zone.Name as ZoneName
     ,COUNT(PalmObservation.Id) as ObservationCount
-FROM Palm
+FROM Palm, varCTE
 LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
 LEFT JOIN PalmObservation ON Palm.Id = PalmObservation.PalmId
-GROUP BY Palm.Id
-ORDER BY Genus, Species, Variety
-LIMIT ? OFFSET ?
-    """,
-
-
-    "search_all": """
-SELECT Palm.*
-    ,Zone.Name as ZoneName
-    ,COUNT(PalmObservation.Id) as ObservationCount
-FROM Palm
-LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
-LEFT JOIN PalmObservation ON Palm.Id = PalmObservation.PalmId
-WHERE Genus LIKE ? OR Species LIKE ? OR Variety LIKE ? OR CommonName LIKE ?
+-- Allow unobserved unless we are filtering them out
+WHERE (PalmObservation.Id IS NOT NULL OR varFilterObserved = 0)
+-- If there is a search term, then filter on it
+    AND (varTerm is NULL 
+        OR INSTR(UPPER(Genus), varTerm) > 0 
+        OR INSTR(UPPER(Species), varTerm) > 0 
+        OR INSTR(UPPER(Variety), varTerm) > 0 
+        OR INSTR(UPPER(CommonName), varTerm) > 0
+        OR INSTR(UPPER(Zone.Name), varTerm) > 0
+    )
 GROUP BY Palm.Id
 ORDER BY Genus, Species, Variety
 LIMIT ? OFFSET ?

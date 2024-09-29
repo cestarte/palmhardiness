@@ -9,11 +9,16 @@ import math
 
 api = Blueprint('palm_api', __name__)
 
+def is_arg_true(value:str) -> bool:
+    return value.lower() in ['true', 'yes', '1']
+
+
 @api.route('/', methods=['GET'])
 def get_all():
     page = request.args.get('page', 1, type=int)
     results_per_page = request.args.get('results_per_page', 15, type=int)
     search_term = request.args.get('search', None, type=str)
+    filter_unobserved = request.args.get('filter_unobserved', False, type=is_arg_true)
 
     # sanity check the inputs
     if page < 1:
@@ -22,18 +27,15 @@ def get_all():
         results_per_page = 15
     if results_per_page > 100:
         results_per_page = 100
+    if search_term is not None and len(search_term) < 3:
+        search_term = None
 
     total_pages = 0
     total_records = 0
     records = 0
     record_offset = (page-1) * results_per_page
-    if search_term is None or search_term == '':
-        # no term provided, get all records
-        total_records = query_db(palm.queries['get_count'], one=True)[0]
-        records = query_db(palm.queries['get_all'], (results_per_page, record_offset))
-    else:
-        total_records = query_db(palm.queries['search_count'], (f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',), one=True)[0]
-        records = query_db(palm.queries['search_all'], (f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',f'%{search_term}%', results_per_page, record_offset))
+    total_records = query_db(palm.queries['get_count'], (filter_unobserved, search_term), one=True)[0]
+    records = query_db(palm.queries['get_records'], (filter_unobserved, search_term, results_per_page, record_offset))
 
     total_pages = math.ceil(total_records / results_per_page)
     has_previous_page = False
