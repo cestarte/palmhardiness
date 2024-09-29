@@ -4,16 +4,24 @@ from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 from exceptions import InvalidApiUsage
 from palm_api import api as palm_api
+from cycad_api import api as cycad_api
 import palm_web
+import cycad_web
 from datasource_api import api as datasource_api
 from datasource_web import web as datasource_web
 import requests
 import sqlite3
-
+# origins=['http://localhost:5000', 'http://127.0.0.1:5000'],
 app = Flask(__name__)
-CORS(app)
+CORS(app, 
+    send_wildcard=True,
+    vary_header=True,
+    resources= {
+        r"/api/*": {"origins": "*"},
+        r"/*": {"origins": "*"}
+    })
 
-# put this sippet ahead of all your bluprints
+#put this snippet ahead of all your bluprints
 @app.after_request 
 def after_request(response):
     header = response.headers
@@ -22,10 +30,12 @@ def after_request(response):
 
 app.config['Database'] = './palmhardiness.db'
 
-app.register_blueprint(palm_web.web, url_prefix='/palm')
+app.register_blueprint(palm_web.web, url_prefix='/palm', name='palm_web')
+app.register_blueprint(cycad_web.web, url_prefix='/cycad', name='cycad_web')
 app.register_blueprint(datasource_web, url_prefix='/datasource')
 
-app.register_blueprint(palm_api , url_prefix='/api/palm')
+app.register_blueprint(palm_api , url_prefix='/api/palm', name='palm_api')
+app.register_blueprint(cycad_api , url_prefix='/api/cycad', name='cycad_api')
 app.register_blueprint(datasource_api , url_prefix='/api/datasource')
 
 @app.route('/about', methods=['GET'])
@@ -45,7 +55,7 @@ def map():
 
 @app.route('/', methods=['GET'])
 def index():
-    return redirect(url_for('web.index'))
+    return redirect(url_for('palm_web.index'))
 
 @app.teardown_appcontext
 def close_connection(exception):

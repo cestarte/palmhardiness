@@ -4,7 +4,65 @@ from util.string import clean
 from data.models.cycad import Cycad
 
 queries = {
+    "get_count": """
+SELECT COUNT(*) as count
+FROM (
+        WITH varCTE AS (SELECT ? AS varFilterObserved, UPPER(?) AS varTerm)
+        SELECT COUNT(*) as ObservationCount
+        FROM Cycad, varCTE
+        LEFT JOIN Zone ON Cycad.ZoneId = Zone.Id
+        LEFT JOIN CycadObservation ON Cycad.Id = CycadObservation.CycadId
+        -- Allow unobserved unless we are filtering them out
+        WHERE (CycadObservation.Id IS NOT NULL OR varFilterObserved = 0)
+        -- If there is a search term, then filter on it
+            AND (varTerm is NULL 
+                OR INSTR(UPPER(Genus), varTerm) > 0 
+                OR INSTR(UPPER(Species), varTerm) > 0 
+                OR INSTR(UPPER(Variety), varTerm) > 0 
+                OR INSTR(UPPER(CommonName), varTerm) > 0
+                OR INSTR(UPPER(Zone.Name), varTerm) > 0
+    )
+    GROUP BY Cycad.Id
+)
+    """,
+
+    "get_records": """
+WITH varCTE AS (SELECT ? AS varFilterObserved, UPPER(?) AS varTerm)
+SELECT Cycad.*
+    ,Zone.Name as ZoneName
+    ,COUNT(CycadObservation.Id) as ObservationCount
+FROM Cycad, varCTE
+LEFT JOIN Zone ON Cycad.ZoneId = Zone.Id
+LEFT JOIN CycadObservation ON Cycad.Id = CycadObservation.CycadId
+-- Allow unobserved unless we are filtering them out
+WHERE (CycadObservation.Id IS NOT NULL OR varFilterObserved = 0)
+-- If there is a search term, then filter on it
+    AND (varTerm is NULL 
+        OR INSTR(UPPER(Genus), varTerm) > 0 
+        OR INSTR(UPPER(Species), varTerm) > 0 
+        OR INSTR(UPPER(Variety), varTerm) > 0 
+        OR INSTR(UPPER(CommonName), varTerm) > 0
+        OR INSTR(UPPER(Zone.Name), varTerm) > 0
+    )
+GROUP BY Cycad.Id
+ORDER BY Genus, Species, Variety
+LIMIT ? OFFSET ?
+    """,
+
+
+    "get_one": """
+SELECT Cycad.*
+    ,Zone.Name as ZoneName
+	,(SELECT COUNT(*) 
+		FROM CycadObservation
+	WHERE CycadId = Cycad.Id) AS [ObservationCount]
+FROM Cycad
+LEFT JOIN Zone ON Cycad.ZoneId = Zone.Id
+WHERE Cycad.Id = ?
+    """,
+
     "drop": "DROP TABLE IF EXISTS cycad",
+    
     "create": """
 CREATE TABLE IF NOT EXISTS "Cycad" (
 "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -20,6 +78,23 @@ FOREIGN KEY (ZoneId) REFERENCES "Zone" (Id)
 );
     """
 }
+
+def read_from_row(row:sqlite3.Row) -> Cycad:
+    cycad = Cycad()
+    cycad.id = row["Id"]
+    cycad.legacy_id = row["LegacyId"]
+    cycad.genus = row["Genus"]
+    cycad.species = row["Species"]
+    cycad.variety = row["Variety"]
+    cycad.common_name = row["CommonName"]
+    cycad.zone_id = row["ZoneId"]
+    cycad.last_modified = row["LastModified"]
+    cycad.who_modified = row["WhoModified"]
+    if hasattr(cycad, 'zone_name') and 'ZoneName' in row.keys():
+        cycad.zone_name = row["ZoneName"]
+    if hasattr(cycad, 'observation_count') and 'ObservationCount' in row.keys():
+        cycad.observation_count = row["ObservationCount"]
+    return cycad
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Cycad]:
     cycads:list[Cycad] = []

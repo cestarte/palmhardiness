@@ -1,13 +1,13 @@
 from flask import Blueprint, g, current_app, request
 import sqlite3
-from data.models.palm import Palm, PalmSerializer
-from data.models.palmobservation import PalmObservation, PalmObservationSerializer
-from data.repositories import palmrepo as palm
-from data.repositories import palmobservationrepo as palmobservation
+from data.models.cycad import Cycad, CycadSerializer
+from data.models.cycadobservation import CycadObservation, CycadObservationSerializer
+from data.repositories import cycadrepo as cycad
+from data.repositories import cycadobservationrepo as cycadobservation
 import json
 import math
 
-api = Blueprint('palm_api', __name__)
+api = Blueprint('cycad_api', __name__)
 
 def is_arg_true(value:str) -> bool:
     return value.lower() in ['true', 'yes', '1']
@@ -34,8 +34,8 @@ def get_all():
     total_records = 0
     records = 0
     record_offset = (page-1) * results_per_page
-    total_records = query_db(palm.queries['get_count'], (filter_unobserved, search_term), one=True)[0]
-    records = query_db(palm.queries['get_records'], (filter_unobserved, search_term, results_per_page, record_offset))
+    total_records = query_db(cycad.queries['get_count'], (filter_unobserved, search_term), one=True)[0]
+    records = query_db(cycad.queries['get_records'], (filter_unobserved, search_term, results_per_page, record_offset))
 
     total_pages = math.ceil(total_records / results_per_page)
     has_previous_page = False
@@ -48,8 +48,8 @@ def get_all():
         has_next_page = True
     
     # convert records to objects so that they can be serialized to json
-    objects:list[Palm] = [palm.read_from_row(row) for row in records]
-    objects_json_string = json.dumps(objects, cls=PalmSerializer)
+    objects:list[Cycad] = [cycad.read_from_row(row) for row in records]
+    objects_json_string = json.dumps(objects, cls=CycadSerializer)
     # convert string to json object so it can be returned in the response
     objects_json = json.loads(objects_json_string)
 
@@ -77,16 +77,16 @@ def get_all():
 
     if search_term is None or search_term == '':
         # no term provided, get all records
-        total_records = query_db(palm.queries['get_count'], one=True)[0]
-        records = query_db(palm.queries['get_all'], (num_results, offset))
+        total_records = query_db(cycad.queries['get_count'], one=True)[0]
+        records = query_db(cycad.queries['get_all'], (num_results, offset))
     else:
-        total_records = query_db(palm.queries['search_count'], (f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',), one=True)[0]
-        records = query_db(palm.queries['search_all'], (f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',f'%{search_term}%', num_results, offset))
+        total_records = query_db(cycad.queries['search_count'], (f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',), one=True)[0]
+        records = query_db(cycad.queries['search_all'], (f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',f'%{search_term}%', num_results, offset))
 
     
     # convert records to objects so that they can be serialized to json
-    objects:list[Palm] = [palm.read_from_row(row) for row in records]
-    objects_json_string = json.dumps(objects, cls=PalmSerializer)
+    objects:list[Cycad] = [cycad.read_from_row(row) for row in records]
+    objects_json_string = json.dumps(objects, cls=CycadSerializer)
     # convert string to json object so it can be returned in the response
     objects_json = json.loads(objects_json_string)
 
@@ -95,19 +95,19 @@ def get_all():
         'meta': {'offset': offset, 'num_results': len(objects), 'total_results': total_records}
     }
 
-@api.route('/<int:palm_id>', methods=['GET'])
-def get_one(palm_id):
-    record = query_db(query=palm.queries['get_one'], args=(palm_id,), one=True)
+@api.route('/<int:cycad_id>', methods=['GET'])
+def get_one(cycad_id):
+    record = query_db(query=cycad.queries['get_one'], args=(cycad_id,), one=True)
     if record is not None:
-        obj = palm.read_from_row(record)
-        return json.dumps(obj, cls=PalmSerializer)
+        obj = cycad.read_from_row(record)
+        return json.dumps(obj, cls=CycadSerializer)
     return json.dumps(None)
 
-@api.route('/<int:palm_id>/observations', methods=['GET'])
-def get_observations(palm_id):
-    records = query_db(query=palmobservation.queries['get_all_for_palm'], args=(palm_id,))
-    objects:list[PalmObservation] = [palmobservation.read_from_row(row) for row in records]
-    objects_json_string = json.dumps(objects, cls=PalmObservationSerializer)
+@api.route('/<int:cycad_id>/observations', methods=['GET'])
+def get_observations(cycad_id):
+    records = query_db(query=cycadobservation.queries['get_all_for_cycad'], args=(cycad_id,))
+    objects:list[CycadObservation] = [cycadobservation.read_from_row(row) for row in records]
+    objects_json_string = json.dumps(objects, cls=CycadObservationSerializer)
     objects_json = json.loads(objects_json_string)
     return objects_json
 

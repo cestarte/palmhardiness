@@ -30,7 +30,19 @@ CREATE TABLE IF NOT EXISTS "CycadObservation" (
     FOREIGN KEY (DamageId) REFERENCES "Damage" (Id),
     FOREIGN KEY (EventId) REFERENCES "Event" (Id)
 );
-    """
+    """,
+
+        "get_all_for_cycad": """
+SELECT CycadObservation.*
+    ,Event.Name as EventName
+    ,Event.Description as EventDescription
+    ,Event.WhoReported as EventWhoReported
+    ,Damage.Text as DamageText
+FROM CycadObservation
+LEFT JOIN Event on CycadObservation.EventId = Event.Id
+LEFT JOIN Damage on CycadObservation.DamageId = Damage.Id
+WHERE CycadId = ?
+    """,
 }
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> list[CycadObservation]:
@@ -190,3 +202,30 @@ def write_to_database(database_path:str, observations:list[CycadObservation]):
         if con:
             con.close()
 
+def read_from_row(row:sqlite3.Row) -> CycadObservation:
+    o = CycadObservation()
+    o.id = row['Id']
+    o.legacy_id = row['LegacyId']
+    o.cycad_id = row['CycadId']
+    o.cycad_legacy_id = row['CycadLegacyId']
+    o.who_reported = row['WhoReported']
+    o.city = row['City']
+    o.state = row['State']
+    o.country = row['Country']
+    o.damage_id = row['DamageId']
+    o.damage_legacy_id = row['DamageLegacyId']
+    o.event_id = row['EventId']
+    o.event_legacy_id = row['EventLegacyId']
+    o.description = row['Description']
+    o.source = row['Source']
+    o.low_temp = row['LowTemp']
+    o.last_modified = row['LastModified']
+    o.who_modified = row['WhoModified']
+
+    # These are joined fields
+    o.event_name = row['EventName']
+    o.event_description = row['EventDescription']
+    o.event_who_reported = row['EventWhoReported']
+    o.damage_text = row['DamageText']
+
+    return o

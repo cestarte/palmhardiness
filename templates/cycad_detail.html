@@ -1,12 +1,12 @@
 {% extends "layout.html" %}
-{% block title %}{{data.palm_name}}{% endblock %}
+{% block title %}{{data.cycad_name}}{% endblock %}
 {% block head %}
 <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 {% endblock %}
 {% block header %}
 <section class=" hero is-primary">
     <div class="hero-body">
-        <p class="title">{{ data.palm_name }}</p>
+        <p class="title">{{ data.cycad_name }}</p>
         <p class="subtitle">{{ data.common_name if data.common_name is not none }}</p>
     </div>
 </section>
@@ -36,11 +36,11 @@
     &nbsp;
 
     <a target="_blank"
-        href="https://www.palmtalk.org/forum/search/?&q=%22{{data.palm_name}}%22&quick=1&search_and_or=or&sortby=relevancy">
+        href="https://www.palmtalk.org/forum/search/?&q=%22{{data.cycad_name}}%22&quick=1&search_and_or=or&sortby=relevancy">
         <i class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmTalk</a>
     &nbsp;
 
-    <a target="_blank" href="https://palmpedia.net/wiki/index.php5?search={{data.palm_name}}">
+    <a target="_blank" href="https://palmpedia.net/wiki/index.php5?search={{data.cycad_name}}">
         <i class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmPedia</a></p>
 </div>
 
@@ -69,7 +69,7 @@
 <script>
     async function getObservationsAsync() {
         try {
-            const response = await fetch('/api/palm/{{data.id}}/observations')
+            const response = await fetch('/api/cycad/{{data.id}}/observations')
             if (!response.ok) {
                 throw new Error('Network response was not OK.', response)
             }

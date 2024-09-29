@@ -12,7 +12,7 @@ window.onload = async function () {
                 'label': ' ',
                 'selectable': false,
                 'custom_body': function (record) {
-                    return `<a href="/palm/${record['id']}" aria-label="Go to palm" title="Go to palm">
+                    return `<a href="/cycad/${record['id']}" aria-label="Go to cycad" title="Go to cycad">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                             </a>`
                 }
@@ -114,8 +114,8 @@ async function onLoadIndexTable() {
 }
 
 async function getObservations(meta) {
-    // localhost:5000/api/palm/?offset=0&page=2&results_per_page=15
-    let url = '/api/palm/'
+    // localhost:5000/api/cycad/?offset=0&page=2&results_per_page=15
+    let url = '/api/cycad/'
 
     // Object may have multiple query parameters.
     if (meta && typeof meta === 'object') {
