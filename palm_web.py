@@ -45,3 +45,7 @@ def detail(palm_id):
             return render_template('palm_detail.html', data=api_json)
     else:
          return render_template('404_generic.html'), 404
+
+@web.route('/observations', methods=['GET'])
+def observations():
+     return render_template('palm_observations.html')

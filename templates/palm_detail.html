@@ -44,26 +44,12 @@
         <i class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmPedia</a></p>
 </div>
 
-<div class="table-container mb-0" id="observation-table">
+<div class="table-container">
+    <div id="observation-table">
+    </div>
 </div>
 
-<template id="observation-temp">
-    <div class="dropdown is-up is-hoverable">
-        <div class="dropdown-trigger">
-            <span aria-haspopup="true" aria-controls="observation-temp-dropdown">
-                <span name="f"></span>
-            </span>
-        </div>
-        <div class="dropdown-menu" id="observation-temp-dropdown" role="menu">
-            <div class="dropdown-content">
-                <div class="dropdown-item">
-                    <p><span name="f"></span> °F</p>
-                    <p><span name="c"></span> °C</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
+{% include 'observation_temp_cell.html' %}
 
 <script src="{{ url_for('static', filename='js/vanilla_table.js') }}"></script>
 <script>

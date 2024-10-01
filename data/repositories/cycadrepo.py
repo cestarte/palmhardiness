@@ -117,6 +117,10 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
             print("[WARNING] Correcting for empty entry in 2023 spreadsheet. Ignoring row w/ id 8025")
             continue
 
+        if '2024' in workbook and cycad.genus is None:
+            print("[WARNING] Ignoring entry with missing genus in 2024 spreadsheet. Ignoring row w/ id", cycad.legacy_id)
+            continue
+
         cycads.append(cycad)
 
     wb.close()
