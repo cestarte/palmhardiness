@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block title %}Palm Obsersavtions{% endblock %}
+{% block header %}
+<section class="hero is-primary is-primary">
+    <div class="hero-body">
+        <p class="title">Palm Observations</p>
+        <p class="subtitle">What does the data say?</p>
+    </div>
+</section>
+{% endblock %}
+{% block content %}
+
+
+<h1 class="is-size-4 mt-4" id="contribute"> <a href="#lowestsurviving"> <i
+            class="fa-solid fa-link is-size-6 has-text-grey-lighter"></i></a>Lowest surviving temps</h1>
+
+<div class="grid mb-1">
+    <div class="cell is-col-span-2">
+    </div>
+    <div class="cell">
+        <input type="text" id="lowest-surviving-search-input" class="input" placeholder="Search..." value="" />
+    </div>
+</div>
+
+<div class="table-container">
+    <div id="lowest-surviving-table-placeholder"></div>
+</div>
+<code>
+    SELECT 
+    P.Id
+    ,P.Genus
+    ,P.Species
+    ,MIN(O.LowTemp) AS [Min]
+    ,MAX(O.LowTemp) AS [Max]
+    ,ROUND(AVG(O.LowTemp), 2) AS [Average]
+    ,COUNT(*) AS [Records]
+  FROM PalmObservation AS O
+      INNER JOIN Palm AS P ON O.PalmId = P.Id
+      INNER JOIN Damage AS D ON O.DamageId = D.Id
+  WHERE UPPER(D.Text) NOT LIKE 'DEATH'
+      AND UPPER(D.Text) NOT LIKE 'NO CONFIRMATION%'
+  GROUP BY Genus, Species
+  ORDER BY  Genus ASC, Species ASC, Min ASC
+  
+</code>
+
+<script src="{{ url_for('static', filename='js/vanilla_table.js') }}"></script>
+<script src="{{ url_for('static', filename='js/palm_questions_lowest_surviving_table.js') }}"></script>
+
+{% endblock %}

@@ -46,6 +46,6 @@ def detail(palm_id):
     else:
          return render_template('404_generic.html'), 404
 
-@web.route('/observations', methods=['GET'])
-def observations():
-     return render_template('palm_observations.html')
+@web.route('/questions', methods=['GET'])
+def questions():
+     return render_template('palm_questions.html')
