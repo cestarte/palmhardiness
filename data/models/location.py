@@ -14,10 +14,10 @@ class Location:
         self.country:Optional[str] = None
 
         # Fields not stored to DB
+        self.palm_observations:Optional[int] = 0
+        self.events:Optional[int] = 0
+        self.cycad_observations:Optional[int] = 0
         # Used during import to track the ids of associated items
-        # self.palm_observations:list[int] = []
-        # self.event_observations:list[int] = []
-        # self.cycad_observations:list[int] = []
         self.source:Optional[str] = None
         self.source_id:Optional[int] = None
 
@@ -44,7 +44,10 @@ class LocationSerializer(JSONEncoder):
                 "longitude": o.longitude,
                 "city": o.city,
                 "state": o.state,
-                "country": o.country
+                "country": o.country,
+                "palm_observations": o.palm_observations,
+                "cycad_observations": o.cycad_observations,
+                "events": o.events,
             }
         return super(LocationSerializer, self).default(o)
 

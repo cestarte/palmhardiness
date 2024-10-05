@@ -62,13 +62,14 @@ def main():
     cycadobservationrepo.write_to_database(database_path, cycadobservations)    
 
     locations = locationrepo.read_locations_from_other_tables(database_path)
-    #locations = locationrepo.remove_duplicates(locations)
-    if len([x for x in locations if x.country == None]) > 0:
-        print("WARNING: Found useless locations with no country.")
-        print("These will not be inserted into the database:")
-        print([str(x) for x in locations if x.country == None]) 
+    non_locations = [x for x in locations if x.country == None]
+    if len(non_locations) > 0:
+        print(f'WARNING: Found useless locations with no country.')
+        print('These will not be inserted into the database:')
+        print([str(x) for x in non_locations]) 
     locationrepo.write_to_database_and_wire_up(database_path, [x for x in locations if x.country != None])
     #locationrepo.geolocate(database_path)
+    #locationrepo.populate_hrap(database_path)
 
 if __name__ == "__main__":
     main()

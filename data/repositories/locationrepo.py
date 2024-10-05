@@ -9,19 +9,69 @@ queries = {
 DROP TABLE IF EXISTS "Location"
     """,
     "create": """
-CREATE TABLE IF NOT EXISTS "Location" (
-  "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-  "LastModified" timestamp NOT NULL,
-  "WhoModified" varchar(128) NOT NULL,
-  "Latitude" varchar(6),
-  "Longitude" varchar(6),
-  "City" varchar(512),
-  "State" varchar(512),
-  "Country" varchar NOT NULL
-);
-    """
+        CREATE TABLE IF NOT EXISTS "Location" (
+        "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+        "LastModified" timestamp NOT NULL,
+        "WhoModified" varchar(128) NOT NULL,
+        "Latitude" varchar(6),
+        "Longitude" varchar(6),
+        "City" varchar(512),
+        "State" varchar(512),
+        "Country" varchar NOT NULL
+        );
+    """,
+
+    "get_records": """
+        WITH vars AS (SELECT UPPER(?) AS term)
+        SELECT 
+            Location.*
+            ,(SELECT COUNT(PalmObservation.Id) FROM PalmObservation WHERE PalmObservation.LocationId = Location.Id) AS PalmObservations
+            ,(SELECT COUNT(CycadObservation.Id) FROM CycadObservation WHERE CycadObservation.LocationId = Location.Id) AS CycadObservations
+            ,(SELECT COUNT(Event.Id) FROM Event WHERE Event.LocationId = Location.Id) AS Events
+        FROM Location, vars
+        WHERE (vars.term IS NULL 
+            OR INSTR(UPPER(Location.City), vars.term) > 0 
+            OR INSTR(UPPER(Location.State), vars.term) > 0 
+            OR INSTR(UPPER(Location.Country), vars.term) > 0
+        )
+        ORDER BY Location.Country, Location.State, Location.City
+        LIMIT ? OFFSET ?
+    """,
+
+    "get_count": """
+        WITH vars AS (SELECT UPPER(?) AS term)
+        SELECT COUNT(*) FROM Location, vars
+        WHERE (term IS NULL 
+            OR INSTR(UPPER(City), term) > 0 
+            OR INSTR(UPPER(State), term) > 0 
+            OR INSTR(UPPER(Country), term) > 0
+        )
+    """,
 }
 
+def read_from_row(row:sqlite3.Row) -> Location:
+    #print("row", row.keys())
+    location = Location()
+    location.id = row["Id"]
+    location.last_modified = row["LastModified"]
+    location.who_modified = row["WhoModified"]
+    location.latitude = row["Latitude"]
+    location.longitude = row["Longitude"]
+    location.city = row["City"]
+    location.state = row["State"]
+    location.country = row["Country"]
+
+    # Fields not in the Location table
+    print("CycadObservations", row["CycadObservations"])
+    if row["CycadObservations"] is not None:
+        location.cycad_observations = row["CycadObservations"]
+    print("PalmObservations", row["PalmObservations"])
+    if row["PalmObservations"] is not None:
+        location.palm_observations = row["PalmObservations"]
+    print("Events", row["Events"])
+    if row["Events"] is not None:
+        location.events = row["Events"]
+    return location
 
 def read_locations_from_other_tables(database_path:str) -> list[Location]:
     locations:list[Location] = []
@@ -60,15 +110,6 @@ def read_locations_from_other_tables(database_path:str) -> list[Location]:
             con.close()
     return locations
 
-# def remove_duplicates(locations:list[Location]) -> list[Location]:
-#     print("Removing duplicate locations...")
-#     unique_locations = []
-#     for location in locations:
-#         if location not in unique_locations:
-#             unique_locations.append(location)
-#     return unique_locations
-
-
 def write_to_database_and_wire_up(database_path:str, locations:list[Location]) -> None:
     print("Writing locations to database and wiring up foreign keys...")
     num_new_locations = 0
@@ -89,13 +130,13 @@ def write_to_database_and_wire_up(database_path:str, locations:list[Location]) -
 
         # Now add the foreign key to the record referencing this Location
         table_name = ''
-        if location.source == 'event':
+        if location.source.lower() == 'event':
             table_name = 'Event'
             num_events_updated += 1
-        elif location.source == 'palm':
+        elif location.source.lower() == 'palm':
             table_name = 'PalmObservation'
             num_palm_observations_updated += 1
-        elif location.source == 'cycad':
+        elif location.source.lower() == 'cycad':
             table_name = 'CycadObservation'
             num_cycad_observations_updated += 1
         else:
@@ -158,16 +199,17 @@ def write_to_database(database_path:str, location:Location) -> int:
         if con:
             con.close()
 
-def does_location_exist(database_path:str, country:str, state:str, city:str) -> Optional[int]:
+def does_location_exist(database_path:str, country:Optional[str], state:Optional[str], city:Optional[str]) -> Optional[int]:
     country = normalize_country(country)
-    county = normalize_state(state)
+    state = normalize_state(state)
     city = normalize_city(city)
+
     try:
         con = sqlite3.connect(
             database_path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
         )
         cur = con.cursor()
-        cur.execute("SELECT * FROM Location WHERE Country = ? AND State = ? AND City = ?", (country, county, city))
+        cur.execute("SELECT * FROM Location WHERE Country IS ? AND State IS ? AND City IS ?", (country, state, city))
         result = cur.fetchone()
         return result[0] if result is not None else None
     except sqlite3.Error as error:

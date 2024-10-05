@@ -22,46 +22,71 @@ _________.""", '\n')
 def remove_underscore(s:str) -> str:
     return s.replace('_', ' ')
 
-def normalize_country(value:str) -> Optional[str]:
-    value = remove_non_alpha(clean(value), keep_spaces=True)
-    value = value.strip().lower()
-    if value == 'usa' or value == 'us' or value == 'united states of america': 
+def normalize_country(s:Optional[str]) -> Optional[str]:
+    if s is None:
+        return None
+
+    s = remove_non_alpha(clean(s), keep_spaces=True)
+    s = s.strip().lower()
+    if s == 'usa' or s == 'us' or s == 'united states of america': 
         return 'United States'
     
-    if len(value) <= 3:
-        return value.upper()
+    if len(s) <= 3:
+        return s.upper()
     
-    if value == 'unknown' or value == 'various':
+    if s == 'unknown' or s == 'various':
         return None
 
-    return value.title()
-
-def normalize_state(value:str) -> Optional[str]:
-    value = remove_non_alpha(clean(value), keep_spaces=True)
-    value = value.strip().lower()
-    
-    if len(value) <= 3:
-        return value.upper()
-    
-    if value == 'unknown' or value == 'various':
+    if (len(s) == 0):
         return None
 
-    return value.title()
+    return s.title()
 
-
-def normalize_city(value:str) -> Optional[str]:
-    value = remove_non_alpha(clean(value), keep_spaces=True, keep_hyphens=True)
-    value = value.strip().lower()
-
-    if value == 'unknown' or value == 'various' or value == 'multiple':
+def normalize_state(s:Optional[str]) -> Optional[str]:
+    if s is None:
         return None
 
-    return value.title()
+    s = remove_non_alpha(clean(s), keep_spaces=True, keep_slashes=True)
+    s = s.strip().lower()
+    
+    if len(s) <= 3 or  s.count('/') > 0:
+        return s.upper()
+    
+    if s == 'unknown' or s == 'various':
+        return None
 
-def remove_non_alpha(s:str, keep_spaces:bool=False, keep_hyphens:bool=False) -> str:
+    if (len(s) == 0):
+        return None
+
+    return s.title()
+
+
+def normalize_city(s:Optional[str]) -> Optional[str]:
+    if s is None:
+        return None
+
+    s = remove_non_alpha(clean(s), keep_spaces=True, keep_hyphens=True)
+    s = s.strip().lower()
+
+    if s == 'unknown' or s == 'unkown' or s == 'various' or s == 'multiple':
+        return None
+
+    if (len(s) == 0):
+        return None
+
+    return s.title()
+
+def remove_non_alpha(s:str, keep_spaces:bool=False, keep_hyphens:bool=False, keep_slashes=True) -> str:
     if s is None:
         return ''
-    return ''.join(i for i in s if i.isalpha() or (keep_spaces and i.isspace() or (keep_hyphens and i == '-')))
+    return ''.join(i for i in s 
+                if i.isalpha() or (
+                    keep_spaces and i.isspace()
+                    or (keep_hyphens and i == '-') 
+                    or (keep_slashes and i == '/')
+                    or (keep_slashes and i == '\\')
+                )
+            )
 
 def remove_non_numeric(s:str) -> str:
     if s is None:
