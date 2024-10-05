@@ -140,6 +140,12 @@ def get_lowest_surviving():
         }
     }
 
+@api.route('/<int:palm_id>/stat/<stat_name>', methods=['GET'])
+def get_stat(palm_id, stat_name):
+    record = query_db(palm.queries[f'get_stat_{stat_name}'], (palm_id,), one=True)
+    if record is not None and record['value'] is not None:
+        return json.loads(f'{{"value": "{str(record["value"])}"}}')
+    return json.loads(None)
 
 def get_db():
     db = getattr(g, '_database', None)

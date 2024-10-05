@@ -111,6 +111,63 @@ WHERE PalmObservation.PalmId = ?
 ORDER BY PalmObservation.ObservationDate DESC
     """,
 
+    "get_stat_LOWESTSURVIVED": """
+SELECT MIN(o.LowTemp) AS [value]
+FROM PalmObservation AS o
+INNER JOIN Palm AS p ON o.PalmId = p.Id
+WHERE p.Id = ?
+    """,
+
+    "get_stat_NUMOBSERVATIONS": """
+SELECT COUNT(*) AS [value]
+FROM PalmObservation AS o
+INNER JOIN Palm AS p ON o.PalmId = p.Id
+WHERE p.Id = ?
+    """,
+
+    "get_stat_NUMEVENTS": """
+SELECT COUNT(event) AS [value]
+FROM (
+    SELECT DISTINCT(e.Id) AS [event]
+    FROM PalmObservation AS o
+    INNER JOIN Palm AS p ON o.PalmId = p.Id
+    INNER JOIN Event AS e ON o.EventId = e.Id
+    WHERE p.Id = ?
+    GROUP BY e.Id
+)
+    """,
+
+    "get_stat_MOSTREPORTEDBY": """
+SELECT [who] AS [value]
+FROM (
+    SELECT 
+		e.WhoReported AS [who]
+		,COUNT(e.WhoReported) AS [count]
+    FROM PalmObservation AS o
+    INNER JOIN Palm AS p ON o.PalmId = p.Id
+    INNER JOIN Event AS e ON o.EventId = e.Id
+    WHERE p.Id = ?
+    GROUP BY e.WhoReported
+)
+ORDER BY [count] DESC
+LIMIT 1
+    """,
+
+    "get_stat_MOSTCOMMONLOCATION": """
+SELECT [location] AS [value]
+	,COUNT(*) AS [count]
+FROM (
+    SELECT 
+		o.City || COALESCE(', ' || o.State, '') || COALESCE(', ' || o.Country, '') AS [location]
+    FROM PalmObservation AS o
+    INNER JOIN Palm AS p ON o.PalmId = p.Id
+    INNER JOIN Event AS e ON o.EventId = e.Id
+    WHERE p.Id = ?
+)
+GROUP BY [location]
+ORDER BY [count] DESC
+LIMIT 1
+    """,
 }
 
 def read_from_row(row:sqlite3.Row) -> Palm:

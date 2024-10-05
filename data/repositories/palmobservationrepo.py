@@ -27,9 +27,11 @@ CREATE TABLE IF NOT EXISTS "PalmObservation" (
     "Source" varchar,
     "EventId" integer,
     "EventLegacyId" integer,
+    "LocationId" integer,
     FOREIGN KEY (PalmId) REFERENCES "Palm" (Id),
     FOREIGN KEY (DamageId) REFERENCES "Damage" (Id),
-    FOREIGN KEY (EventId) REFERENCES "Event" (Id)
+    FOREIGN KEY (EventId) REFERENCES "Event" (Id),
+    FOREIGN KEY (LocationId) REFERENCES "Location" (Id)
 );
     """,
 
@@ -39,9 +41,14 @@ SELECT PalmObservation.*
     ,Event.Description as EventDescription
     ,Event.WhoReported as EventWhoReported
     ,Damage.Text as DamageText
+    ,Location.City as LocationCity
+    ,Location.State as LocationState
+    ,Location.Country as LocationCountry
+    ,Location.Id as LocationId
 FROM PalmObservation
 LEFT JOIN Event on PalmObservation.EventId = Event.Id
 LEFT JOIN Damage on PalmObservation.DamageId = Damage.Id
+LEFT JOIN Location on PalmObservation.LocationId = Location.Id
 WHERE PalmId = ?
     """,
 
@@ -224,11 +231,15 @@ def read_from_row(row:sqlite3.Row) -> PalmObservation:
     o.low_temp = row['LowTemp']
     o.last_modified = row['LastModified']
     o.who_modified = row['WhoModified']
+    o.location_id = row['LocationId']
 
     # These are the joined fields
     o.event_name = row['EventName']
     o.event_description = row['EventDescription']
     o.event_who_reported = row['EventWhoReported']
     o.damage_text = row['DamageText']
+    o.location_city = row['LocationCity']
+    o.location_state = row['LocationState']
+    o.location_country = row['LocationCountry']
 
     return o

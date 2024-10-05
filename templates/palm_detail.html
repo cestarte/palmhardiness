@@ -4,47 +4,14 @@
 <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 {% endblock %}
 {% block header %}
-<section class=" hero is-primary">
-    <div class="hero-body">
-        <p class="title">{{ data.palm_name }}</p>
-        <p class="subtitle">{{ data.common_name if data.common_name is not none }}</p>
-    </div>
-</section>
+{% from 'header_block.html' import small_header with context %}
+{{ small_header(data.palm_name, data.common_name if data.common_name is not none) }}
 {% endblock %}
+
 {% block content %}
 
-<!-- {% from 'numbercard.html' import numbercard %}
 
-<div class="grid">
-    <div class="cell">{{ numbercard('Lowest suvived temp', '2 F')}}</div>
-    <div class="cell">{{ numbercard('# Events', '2')}}</div>
-    <div class="cell">{{ numbercard('# Observations', '13')}}</div>
-    <div class="cell">{{ numbercard('Most common location', 'Jacksonville, FL')}}</div>
-    <div class="cell">{{ numbercard('Most Reported by', 'CFPACS')}}</div>
-</div> -->
-
-<div class="box">
-
-    <div class="dropdown is-hoverable">
-        <div class="dropdown-trigger">
-            <p><strong>USDA Zone</strong> <i class="fa-solid fa-circle-info is-size-7" aria-haspopup="true"
-                    aria-controls="zone-help"></i></p>
-        </div>
-        <div class="dropdown-menu" id="zone-help" role="menu">
-            <div class="dropdown-content">
-                <div class="dropdown-item is-size-7 has-text-weight-normal">
-                    <p>USDA Hardiness Zones are based on the average annual minimum
-                        temperature.</p>
-                    <a target="_blank" href="https://planthardiness.ars.usda.gov/"> <i
-                            class="fa-solid fa-arrow-up-right-from-square"></i> More info at
-                        usda.gov</a>
-                </div>
-            </div>
-        </div> <span class="ml-2">{{data.zone_name}}</span>
-    </div>
-
-    &nbsp;
-
+<div class="mt-0">
     <a target="_blank"
         href="https://www.palmtalk.org/forum/search/?&q=%22{{data.palm_name}}%22&quick=1&search_and_or=or&sortby=relevancy">
         <i class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmTalk</a>
@@ -52,6 +19,73 @@
 
     <a target="_blank" href="https://palmpedia.net/wiki/index.php5?search={{data.palm_name}}">
         <i class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmPedia</a></p>
+</div>
+
+
+<!-- <div class="columns">
+    <div class="column is-flex is-flex-direction-column is-flex-grow-1" id="zone"></div>
+    <div class="column is-flex is-flex-direction-column is-flex-grow-1" id="lowest-survived-temp"></div>
+    <div class="column is-flex is-flex-direction-column is-flex-grow-1" id="num-events"></div>
+    <div class="column is-flex is-flex-direction-column is-flex-grow-1" id="num-observations"></div>
+    <div class="column is-flex is-flex-direction-column is-flex-grow-1" id="most-common-location"></div>
+    <div class="column is-flex is-flex-direction-column is-flex-grow-1" id="most-reported-by"></div>
+</div> -->
+
+<style>
+    .stat-columns {
+        display: flex;
+        flex-flow: row wrap;
+        padding-bottom: .75rem;
+    }
+
+    .stat-column {
+        flex-grow: 1;
+        flex-direction: column;
+        flex-basis: auto;
+        margin: 0.5rem;
+        /* background: lightgray; */
+
+        box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
+        /* border-radius: .75rem;
+        border: 1px solid #f0f0f0;
+        padding: .5rem; */
+        padding: 0;
+
+        /* same bottom border as stat footer */
+        border: 0;
+        border-bottom-left-radius: .75rem;
+        border-bottom-right-radius: .75rem;
+    }
+
+    .stat-column .stat-body {
+        display: flex;
+        flex-direction: column;
+        flex-basis: inherit;
+        /* background-color: orange; */
+        flex-grow: 2;
+        min-height: 4rem;
+        height: 100%;
+    }
+
+    .stat-column footer {
+        background: #f0f0f0;
+        padding: 0.5rem;
+        /* same bottom border as stat-card */
+        border: 1px solid #f0f0f0;
+        border-bottom-left-radius: .75rem;
+        border-bottom-right-radius: .75rem;
+        height: 2rem;
+        line-height: 1rem;
+    }
+</style>
+
+<div class="stat-columns">
+    <div class="stat-column" id="zone"></div>
+    <div class="stat-column" id="lowest-survived-temp"></div>
+    <div class="stat-column" id="num-events"></div>
+    <div class="stat-column" id="num-observations"></div>
+    <!-- <div class="stat-column" id="most-common-location"></div>
+    <div class="stat-column" id="most-reported-by"></div> -->
 </div>
 
 <div class="table-container">
@@ -62,6 +96,7 @@
 {% include 'observation_temp_cell.html' %}
 
 <script src="{{ url_for('static', filename='js/vanilla_table.js') }}"></script>
+<script src="{{ url_for('static', filename='js/statcard.js') }}"></script>
 <script>
     async function getObservationsAsync() {
         try {
@@ -81,7 +116,63 @@
         }
     }
 
+    const CardType = {
+        LOWESTSURVIVED: 'LOWESTSURVIVED',
+        NUMEVENTS: 'NUMEVENTS',
+        NUMOBSERVATIONS: 'NUMOBSERVATIONS',
+        MOSTCOMMONLOCATION: 'MOSTCOMMONLOCATION',
+        MOSTREPORTEDBY: 'MOSTREPORTEDBY'
+    };
+
+    async function loadCard(type) {
+        let url = `/api/palm/{{data.id}}/stat/${type}`
+        try {
+            const response = await fetch(url)
+            if (!response.ok) {
+                throw new Error('Network response was not OK.', response)
+            }
+
+            const contentType = response.headers.get("content-type")
+            if (!contentType || !contentType.includes("application/json"))
+                throw new TypeError(`Expected JSON response but got something else: \'${contentType}\'`)
+            return response.json()
+        } catch (error) {
+            console.error('Failed to fetch the card data.', error)
+            return ''
+        }
+    }
+
     window.onload = async function () {
+        const zone = `{{data.zone_name}}`
+        const zone_label = `
+    <div class="dropdown is-hoverable">
+        <div class="dropdown-trigger">
+            <p class="pl-2">USDA Zone <i class="fa-solid fa-circle-info is-size-7" aria-haspopup="true"
+                    aria-controls="zone-help"></i></p>
+        </div>
+        <div class="dropdown-menu" id="zone-help" role="menu">
+            <div class="dropdown-content">
+                <div class="dropdown-item is-size-7 has-text-weight-normal">
+                    <p>USDA Hardiness Zones are based on the average annual minimum
+                        temperature.</p>
+                    <a target="_blank" href="https://planthardiness.ars.usda.gov/"> <i
+                            class="fa-solid fa-arrow-up-right-from-square"></i> More info at
+                        usda.gov</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    `
+
+        const cards = [
+            new StatCard(document.getElementById('zone'), zone_label, zone),
+            new StatCard(document.getElementById('lowest-survived-temp'), 'Lowest survived', '', () => { return loadCard('LOWESTSURVIVED') }),
+            new StatCard(document.getElementById('num-events'), 'Events', '', () => { return loadCard('NUMEVENTS') }),
+            new StatCard(document.getElementById('num-observations'), 'Observations', '', () => { return loadCard('NUMOBSERVATIONS') }),
+            // new StatCard(document.getElementById('most-common-location'), 'Most common location', '', () => { return loadCard('MOSTCOMMONLOCATION') }),
+            // new StatCard(document.getElementById('most-reported-by'), 'Most reported by', '', () => { return loadCard('MOSTREPORTEDBY') })
+        ]
+
         let options = {
             'table_placeholder': 'observation-table',
             'columns': [

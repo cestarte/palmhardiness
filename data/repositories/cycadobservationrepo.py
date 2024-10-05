@@ -26,9 +26,11 @@ CREATE TABLE IF NOT EXISTS "CycadObservation" (
     "Source" varchar,
     "EventId" integer,
     "EventLegacyId" integer,
+    "LocationId" integer,
     FOREIGN KEY (CycadId) REFERENCES "Cycad" (Id),
     FOREIGN KEY (DamageId) REFERENCES "Damage" (Id),
-    FOREIGN KEY (EventId) REFERENCES "Event" (Id)
+    FOREIGN KEY (EventId) REFERENCES "Event" (Id),
+    FOREIGN KEY (LocationId) REFERENCES "Location" (Id)
 );
     """,
 
@@ -38,14 +40,20 @@ SELECT CycadObservation.*
     ,Event.Description as EventDescription
     ,Event.WhoReported as EventWhoReported
     ,Damage.Text as DamageText
+    ,Location.City as LocationCity
+    ,Location.State as LocationState
+    ,Location.Country as LocationCountry
+    ,Location.Id as LocationId
 FROM CycadObservation
 LEFT JOIN Event on CycadObservation.EventId = Event.Id
 LEFT JOIN Damage on CycadObservation.DamageId = Damage.Id
+LEFT JOIN Location on CycadObservation.LocationId = Location.Id
 WHERE CycadId = ?
     """,
 }
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> list[CycadObservation]:
+    """ Read cycad observations from an Excel spreadsheet. """
     items:list[CycadObservation] = []
     print("Reading cycad hardiness observations from spreadsheet...", sheet)
     wb = openpyxl.load_workbook(workbook)
@@ -78,10 +86,9 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> lis
     wb.close()
     return items
 
-
 def translate_ids(database_path:str, observations:list[CycadObservation]) -> list[CycadObservation]:
-    """Populate the relationship ids on the observation. To do that, use the 
-    excel legacy ids to look up the id in our database."""
+    """Populate Event & Damage relationship ids on the observation. To do that, 
+    use the excel legacy ids to look up the id in our database."""
     try:
         con = sqlite3.connect(
             database_path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
@@ -158,8 +165,8 @@ LIMIT 1
 
     return observations
 
-
 def write_to_database(database_path:str, observations:list[CycadObservation]):
+    """Insert cycad observations into the database."""
     print("Inserting cycadobservations to database...")
     current_observation:CycadObservation | None = None
     try:
@@ -203,6 +210,7 @@ def write_to_database(database_path:str, observations:list[CycadObservation]):
             con.close()
 
 def read_from_row(row:sqlite3.Row) -> CycadObservation:
+    """Read a single cycad observation from a database row."""
     o = CycadObservation()
     o.id = row['Id']
     o.legacy_id = row['LegacyId']
@@ -221,11 +229,15 @@ def read_from_row(row:sqlite3.Row) -> CycadObservation:
     o.low_temp = row['LowTemp']
     o.last_modified = row['LastModified']
     o.who_modified = row['WhoModified']
+    o.location_id = row['LocationId']
 
     # These are joined fields
     o.event_name = row['EventName']
     o.event_description = row['EventDescription']
     o.event_who_reported = row['EventWhoReported']
     o.damage_text = row['DamageText']
+    o.location_city = row['LocationCity']
+    o.location_state = row['LocationState']
+    o.location_country = row['LocationCountry']
 
     return o

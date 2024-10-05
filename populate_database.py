@@ -8,7 +8,7 @@ from data.repositories import palmsynonymrepo
 from data.repositories import palmobservationrepo
 from data.repositories import cycadrepo
 from data.repositories import cycadobservationrepo
-
+from data.repositories import locationrepo
 
 def main():
     parser = argparse.ArgumentParser(
@@ -60,6 +60,15 @@ def main():
     cycadobservations = cycadobservationrepo.read_from_excel(excel_path, "HardinessCycads_tbl")
     cycadobservations = cycadobservationrepo.translate_ids(database_path, cycadobservations)
     cycadobservationrepo.write_to_database(database_path, cycadobservations)    
+
+    locations = locationrepo.read_locations_from_other_tables(database_path)
+    #locations = locationrepo.remove_duplicates(locations)
+    if len([x for x in locations if x.country == None]) > 0:
+        print("WARNING: Found useless locations with no country.")
+        print("These will not be inserted into the database:")
+        print([str(x) for x in locations if x.country == None]) 
+    locationrepo.write_to_database_and_wire_up(database_path, [x for x in locations if x.country != None])
+    #locationrepo.geolocate(database_path)
 
 if __name__ == "__main__":
     main()

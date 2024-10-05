@@ -1,7 +1,8 @@
 import openpyxl
 import sqlite3
-from util.string import clean
+from util.string import clean, normalize_country, normalize_state, normalize_city, remove_underscore
 from data.models.event import Event
+from typing import Optional
 
 queries = {
     "drop": """
@@ -18,7 +19,9 @@ CREATE TABLE IF NOT EXISTS "Event" (
     "State" varchar(512) NOT NULL,
     "Country" varchar(512) NOT NULL,
     "Name" varchar NOT NULL,
-    "Description" varchar NOT NULL
+    "Description" varchar NOT NULL,
+    "LocationId" integer,
+    FOREIGN KEY (LocationId) REFERENCES "Location" (Id)
 );
     """
 }
@@ -37,7 +40,7 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
         event.city = clean(row[2])
         event.state = clean(row[3])
         event.country = clean(row[4])
-        event.name = clean(row[5])
+        event.name = remove_underscore(clean(row[5]))
         event.description = clean(row[6])
         events.append(event)
 
