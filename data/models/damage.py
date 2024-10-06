@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from json import JSONEncoder
 
 class Damage:
@@ -6,7 +6,7 @@ class Damage:
         self.id:int | None = None
         self.legacy_id:int | None = None
         self.text:str = "Unknown"
-        self.last_modified:datetime = datetime.now()
+        self.last_modified:datetime = datetime.now(timezone.utc)
         self.who_modified:str = "Excel Importer"
 
 class DamageSerializer(JSONEncoder):

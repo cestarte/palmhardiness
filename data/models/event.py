@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from json import JSONEncoder
 
 class Event:
@@ -11,7 +11,7 @@ class Event:
         self.country:str = "Unknown"
         self.name:str = "Unknown"
         self.description:str = "Unknown"
-        self.last_modified:datetime = datetime.now()
+        self.last_modified:datetime = datetime.now(timezone.utc)
         self.who_modified:str = "Excel Importer"
 
 class EventSerializer(JSONEncoder):

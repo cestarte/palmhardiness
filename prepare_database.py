@@ -85,7 +85,6 @@ def create_tables(database_path):
 
 
 def main():
-    database_path = "palmhardiness.db"
     parser = argparse.ArgumentParser(
         description="Prepare the database schema for importing from Excel."
     )
@@ -93,31 +92,32 @@ def main():
         "-p",
         "--path",
         help="Specify the database full path. Default: palmhardiness.db",
+        default="palmhardiness.db",
+        required=False
     )
     parser.add_argument(
         "-d",
         "--drop",
         action="store_true",
-        help="If specified, will drop tables before creating. You will lose all existing data.",
+        help="Drop all tables except Location then create all tables (including Location.) You will lose all existing data, except Location.",
+        required=False
     )    
     parser.add_argument(
-        "-dl",
-        "--droplocation",
+        "-l",
+        "--location",
         action="store_true",
-        help="Drop Location table before creating. You will lose all existing location data. The location table has its own option here because repopulating it requires time and a network connection to the Nominatim geo service.",
+        help="Drop Location table. You will lose all existing location data. This option exists because repopulating Location requires time and a network connection.",
+        required=False
     )
 
     args = parser.parse_args()
-    print(args)
-    if args.path:
-        database_path = args.path
         
     if args.drop:
-        drop_tables(database_path)
+        drop_tables(args.path)
     if args.droplocation:
-        drop_location_table(database_path)
+        drop_location_table(args.path)
 
-    create_tables(database_path)
+    create_tables(args.path)
 
 if __name__ == "__main__":
     main()

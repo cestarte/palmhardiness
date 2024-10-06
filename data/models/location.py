@@ -1,17 +1,18 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from json import JSONEncoder
 from typing import Optional
 
 class Location:
     def __init__(self):
         self.id:Optional[int] = None
-        self.last_modified:datetime = datetime.now()
+        self.last_modified:datetime = datetime.now(timezone.utc)
         self.who_modified:str = 'Unknown'
         self.latitude:Optional[str] = None
         self.longitude:Optional[str] = None
         self.city:Optional[str] = None
         self.state:Optional[str] = None
         self.country:Optional[str] = None
+        self.when_attempted_geocode:Optional[datetime] = None
 
         # Fields not stored to DB
         self.palm_observations:Optional[int] = 0
@@ -45,6 +46,7 @@ class LocationSerializer(JSONEncoder):
                 "city": o.city,
                 "state": o.state,
                 "country": o.country,
+                "when_attempted_geocode": o.when_attempted_geocode,
                 "palm_observations": o.palm_observations,
                 "cycad_observations": o.cycad_observations,
                 "events": o.events,

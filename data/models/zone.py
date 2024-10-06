@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from json import JSONEncoder
 
 class Zone:
@@ -7,7 +7,7 @@ class Zone:
         self.name:str = "Unknown"
         self.min:float = -1.0
         self.max:float = 1.0
-        self.last_modified:datetime = datetime.now()
+        self.last_modified:datetime = datetime.now(timezone.utc)
         self.who_modified:str = "Excel Importer"
 
 class ZoneSerializer(JSONEncoder):

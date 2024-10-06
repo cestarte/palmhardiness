@@ -3,6 +3,7 @@ import sqlite3
 from typing import Optional
 from util.string import clean, normalize_country, normalize_state, normalize_city
 from data.models.location import Location
+from geopy.geocoders import Nominatim
 
 queries = {
     "drop": """
@@ -17,7 +18,8 @@ DROP TABLE IF EXISTS "Location"
         "Longitude" varchar(6),
         "City" varchar(512),
         "State" varchar(512),
-        "Country" varchar NOT NULL
+        "Country" varchar NOT NULL,
+        "WhenAttemptedGeocode" timestamp
         );
     """,
 
@@ -60,6 +62,7 @@ def read_from_row(row:sqlite3.Row) -> Location:
     location.city = row["City"]
     location.state = row["State"]
     location.country = row["Country"]
+    location.when_attempted_geocode = row["WhenAttemptedGeocode"]
 
     # Fields not in the Location table
     print("CycadObservations", row["CycadObservations"])
@@ -218,3 +221,64 @@ def does_location_exist(database_path:str, country:Optional[str], state:Optional
         if con:
             con.close()
     return None
+
+def read_locations_without_latlong(database_path:str) -> list[Location]:
+    locations:list[Location] = []
+    try:
+        con = sqlite3.connect(
+            database_path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
+        )
+        cur = con.cursor()
+        cur.execute(
+            """
+            SELECT [Id], [City], [State], [Country]
+            FROM Location
+            WHERE ([Latitude] IS NULL 
+                OR [Longitude] IS NULL)
+                AND [Country] IS NOT NULL
+                AND ([WhenAttemptedGeocode] IS NULL OR [WhenAttemptedGeocode] < 
+            """
+        )
+        rows = cur.fetchall()
+        for row in rows:
+            location = Location()
+            location.id = row['Id']
+            location.city = row['City']
+            location.state = row['State']
+            location.latitude = row['Latitude']
+            location.longitude = row['Longitude']
+            location.when_attempted_geocode = row['WhenAttemptedGeocode']
+            locations.append(location)
+    except sqlite3.Error as error:
+        print("Error while reading Locations from sqlite...", error)
+    finally:
+        if con:
+            con.close()
+    return locations
+
+def populate_latlon(database_path:str, locations:list[Location]) -> None:
+    """ Populate the Latitude and Longitude fields of the Location table by using Country, City, & State to geocode the address. 
+    Use the geopy library to geocode the address via the Nominatim geocoder. """
+    pass
+    geolocator = Nominatim(user_agent="Palm Cold Hardiness 0.1")
+    #location = geolocator.geocode("175 5th Avenue NYC")
+
+    # read all the locations which don't already have lat & lon from the database
+    # for location in locations:
+    #     address = f"{location.city}, {location.state}, {location.country}"
+    #     #location = geolocator.geocode(address)
+    #     if location is not None:
+    #         location.latitude = location.latitude
+    #         location.longitude = location.longitude
+    #         #update_latlon(database_path, location)
+    #     else:
+    #         print(f"Couldn't find location for {address}")
+
+
+
+def populate_hrap(database_path:str):
+    """ The US National Weather Service uses Hydrologic Rainfall Analysis Project (HRAP) grid to identify locations. 
+    If a location is in the US, we can use the HRAP grid to consider rainfall data. """
+    #if location.country.lower() != 'united states':
+    #    continue
+    pass

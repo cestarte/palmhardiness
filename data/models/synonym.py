@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from json import JSONEncoder
 
 class Synonym:
@@ -8,7 +8,7 @@ class Synonym:
         self.genus:str = "Unknown"
         self.species:str = "Unknown"
         self.variety:str = "Unknown"
-        self.last_modified:datetime = datetime.now()
+        self.last_modified:datetime = datetime.now(timezone.utc)
         self.who_modified:str = "Excel Importer"
 
 

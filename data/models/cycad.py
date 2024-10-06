@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from json import JSONEncoder
 
 class Cycad:
@@ -11,7 +11,7 @@ class Cycad:
         self.common_name = None
         self.zone_id = 0
         self.zone_name = None
-        self.last_modified = datetime.now()
+        self.last_modified = datetime.now(timezone.utc)
         self.who_modified = "Excel Importer"
 
         # fields not in the database but commonly included

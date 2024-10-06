@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from json import JSONEncoder
 
 class PalmObservation:
@@ -18,7 +18,7 @@ class PalmObservation:
         self.description:str
         self.source:str
         self.low_temp:float
-        self.last_modified:datetime = datetime.now()
+        self.last_modified:datetime = datetime.now(timezone.utc)
         self.who_modified:str = "Excel Importer"
 
         # These fields are not in the database
