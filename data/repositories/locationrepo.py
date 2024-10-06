@@ -274,13 +274,14 @@ def update_latlon(database_path:str, location:Location) -> None:
         data = (
             location.latitude,
             location.longitude,
+            location.geo,
             location.when_attempted_geocode,
             location.who_modified,
             location.last_modified,
             location.id,
         )
         cur.execute(
-            "UPDATE Location SET Latitude = ?, Longitude = ?, WhenAttemptedGeocode = ?, WhoModified = ?, LastModified = ? WHERE Id = ?",
+            "UPDATE Location SET Latitude = ?, Longitude = ?, Geo = ?, WhenAttemptedGeocode = ?, WhoModified = ?, LastModified = ? WHERE Id = ?",
             data,
         )
         con.commit()
@@ -352,6 +353,7 @@ def populate_latlon(database_path:str, locations:list[Location]) -> None:
         if geocoded_location is not None:
             location.latitude = geocoded_location.raw['lat']
             location.longitude = geocoded_location.raw['lon']
+            location.geo = str(geocoded_location.raw)
             print(f'  {location.latitude}, {location.longitude}')
             update_latlon(database_path, location)
         else:

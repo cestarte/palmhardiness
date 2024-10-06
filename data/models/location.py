@@ -12,6 +12,7 @@ class Location:
         self.city:Optional[str] = None
         self.state:Optional[str] = None
         self.country:Optional[str] = None
+        self.geo:Optional[str] = None
         self.when_attempted_geocode:Optional[datetime] = None
 
         # Fields not stored to DB
@@ -46,6 +47,7 @@ class LocationSerializer(JSONEncoder):
                 "city": o.city,
                 "state": o.state,
                 "country": o.country,
+                "geo": o.geo,
                 "when_attempted_geocode": o.when_attempted_geocode,
                 "palm_observations": o.palm_observations,
                 "cycad_observations": o.cycad_observations,
