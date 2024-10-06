@@ -38,11 +38,12 @@ def main():
     args = parser.parse_args()
 
     if args.excel is not None:
-        perform_import(args.excel, args.database)
+        perform_import(args.excel, args.path)
     
     if args.location:
-        locationrepo.populate_latlon(args.database)
-        locationrepo.populate_hrap(args.database)
+        locations_without_latlon = locationrepo.read_locations_without_latlon(args.path)
+        locationrepo.populate_latlon(args.path, locations_without_latlon)
+        #locationrepo.populate_hrap(args.path)
     
 
 def perform_import(excel_path, database_path):
@@ -86,4 +87,6 @@ def perform_import(excel_path, database_path):
     #locationrepo.populate_hrap(database_path)
 
 if __name__ == "__main__":
+    # python ./populate_database.py -e ./202406092045_ColdHardinessMasterData.xlsx
+    # python ./populate_database.py --location
     main()

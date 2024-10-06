@@ -1,5 +1,7 @@
 import openpyxl
 import sqlite3
+import time
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 from util.string import clean, normalize_country, normalize_state, normalize_city
 from data.models.location import Location
@@ -222,13 +224,17 @@ def does_location_exist(database_path:str, country:Optional[str], state:Optional
             con.close()
     return None
 
-def read_locations_without_latlong(database_path:str) -> list[Location]:
+def read_locations_without_latlon(database_path:str) -> list[Location]:
     locations:list[Location] = []
     try:
         con = sqlite3.connect(
             database_path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
         )
         cur = con.cursor()
+        long_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        # get all locations which don't have lat & lon
+        # and have a country
+        # and have not attempted geocoding in at since 'long_ago'
         cur.execute(
             """
             SELECT [Id], [City], [State], [Country]
@@ -236,18 +242,21 @@ def read_locations_without_latlong(database_path:str) -> list[Location]:
             WHERE ([Latitude] IS NULL 
                 OR [Longitude] IS NULL)
                 AND [Country] IS NOT NULL
-                AND ([WhenAttemptedGeocode] IS NULL OR [WhenAttemptedGeocode] < 
-            """
+                AND ([WhenAttemptedGeocode] IS NULL OR [WhenAttemptedGeocode] < ?)
+            ORDER BY [Country] DESC, [State] DESC, [City] ASC
+            """,
+            (long_ago,),
         )
-        rows = cur.fetchall()
+        rows:list[sqlite3.Row] = cur.fetchall()
         for row in rows:
             location = Location()
-            location.id = row['Id']
-            location.city = row['City']
-            location.state = row['State']
-            location.latitude = row['Latitude']
-            location.longitude = row['Longitude']
-            location.when_attempted_geocode = row['WhenAttemptedGeocode']
+            location.id = row[0]
+            location.city = row[1]
+            location.state = row[2]
+            location.country = row[3]
+            #location.latitude = row[4]
+            #location.longitude = row[5]
+            #location.when_attempted_geocode = row[6]
             locations.append(location)
     except sqlite3.Error as error:
         print("Error while reading Locations from sqlite...", error)
@@ -255,6 +264,54 @@ def read_locations_without_latlong(database_path:str) -> list[Location]:
         if con:
             con.close()
     return locations
+
+def update_latlon(database_path:str, location:Location) -> None:
+    try:
+        con = sqlite3.connect(
+            database_path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
+        )
+        cur = con.cursor()
+        data = (
+            location.latitude,
+            location.longitude,
+            location.when_attempted_geocode,
+            location.who_modified,
+            location.last_modified,
+            location.id,
+        )
+        cur.execute(
+            "UPDATE Location SET Latitude = ?, Longitude = ?, WhenAttemptedGeocode = ?, WhoModified = ?, LastModified = ? WHERE Id = ?",
+            data,
+        )
+        con.commit()
+    except sqlite3.Error as error:
+        print("Error while updating Latitude and Longitude in sqlite...", error)
+    finally:
+        if con:
+            con.close()
+
+def update_geocode_attempt(database_path:str, location:Location) -> None:
+    try:
+        con = sqlite3.connect(
+            database_path, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
+        )
+        cur = con.cursor()
+        data = (
+            location.when_attempted_geocode,
+            location.who_modified,
+            location.last_modified,
+            location.id,
+        )
+        cur.execute(
+            "UPDATE Location SET WhenAttemptedGeocode = ?, WhoModified = ?, LastModified = ? WHERE Id = ?",
+            data,
+        )
+        con.commit()
+    except sqlite3.Error as error:
+        print("Error while updating Location geocode attempt date in sqlite...", error)
+    finally:
+        if con:
+            con.close()
 
 def populate_latlon(database_path:str, locations:list[Location]) -> None:
     """ Populate the Latitude and Longitude fields of the Location table by using Country, City, & State to geocode the address. 
@@ -264,15 +321,45 @@ def populate_latlon(database_path:str, locations:list[Location]) -> None:
     #location = geolocator.geocode("175 5th Avenue NYC")
 
     # read all the locations which don't already have lat & lon from the database
-    # for location in locations:
-    #     address = f"{location.city}, {location.state}, {location.country}"
-    #     #location = geolocator.geocode(address)
-    #     if location is not None:
-    #         location.latitude = location.latitude
-    #         location.longitude = location.longitude
-    #         #update_latlon(database_path, location)
-    #     else:
-    #         print(f"Couldn't find location for {address}")
+    current_index = 0
+    for location in locations:
+        current_index += 1
+        print(f'Geocoding {current_index} of {len(locations)}')
+        
+        address = ''
+        if location.city is not None:
+            address += location.city
+        if location.state is not None:
+            if address != '':
+                address += ', '
+            address += location.state
+        if location.country is not None:
+            if address != '':
+                address += ', '
+            address += location.country
+        print(f'  "{address}"')
+   
+        geocoded_location = None
+        try:
+            geocoded_location = geolocator.geocode(address)
+        except Exception as e:
+            print(f'  Error geocoding "{address}"', e)
+        finally:
+            location.when_attempted_geocode = datetime.now(timezone.utc)
+            location.who_modified = 'Geocoder'
+            location.last_modified = location.when_attempted_geocode 
+
+        if geocoded_location is not None:
+            location.latitude = geocoded_location.raw['lat']
+            location.longitude = geocoded_location.raw['lon']
+            print(f'  {location.latitude}, {location.longitude}')
+            update_latlon(database_path, location)
+        else:
+            print(f'  No location found.')
+            update_geocode_attempt(database_path, location)
+
+        # rate limit to avoid banning
+        time.sleep(90) 
 
 
 

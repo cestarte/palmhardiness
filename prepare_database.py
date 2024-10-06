@@ -103,7 +103,6 @@ def main():
         required=False
     )    
     parser.add_argument(
-        "-l",
         "--location",
         action="store_true",
         help="Drop Location table. You will lose all existing location data. This option exists because repopulating Location requires time and a network connection.",
@@ -114,7 +113,7 @@ def main():
         
     if args.drop:
         drop_tables(args.path)
-    if args.droplocation:
+    if args.location:
         drop_location_table(args.path)
 
     create_tables(args.path)
