@@ -1,8 +1,71 @@
 {% extends "layout.html" %}
 {% block title %}About{% endblock %}
 {% block head %}
-<script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css">
+<!-- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script> -->
+<link rel="stylesheet" href="{{ url_for('static', filename='js/leaflet/leaflet.css') }}" />
+<script src="{{ url_for('static', filename='js/leaflet/leaflet.js') }}"></script>
+<style>
+    #map {
+        min-height: 180px;
+        height: 80vh;
+    }
+
+    .event-marker {
+        background-color: blue;
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        /* border-radius: 3rem 3rem 0; */
+        /* transform: rotate(90deg); */
+        border: 1px solid #FFFFFF
+    }
+
+    .event-marker span {
+        color: white;
+        font-size: 1rem;
+        font-weight: bold;
+        display: block;
+        /* transform: rotate(-45deg); */
+        margin-top: 0.1rem;
+        margin-left: 0.1rem;
+    }
+
+    .palm-observation-marker {
+        background-color: green;
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        border-radius: 3rem 3rem 0;
+        border: 1px solid white
+    }
+
+    .palm-observation-marker span {
+        color: white;
+        font-size: 1rem;
+        font-weight: bold;
+        display: block;
+        margin-top: 0.1rem;
+        margin-left: 0.1rem;
+    }
+
+    .cycad-observation-marker {
+        background-color: lawngreen;
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        border-radius: 3rem 3rem;
+        border: 1px solid white
+    }
+
+    .cycad-observation-marker span {
+        color: black;
+        font-size: 1rem;
+        font-weight: bold;
+        display: block;
+        margin-top: 0.1rem;
+        margin-left: 0.1rem;
+    }
+</style>
 {% endblock %}
 {% block header %}
 <section class="hero is-primary">
@@ -15,5 +78,133 @@
 {% block content %}
 
 
+<div id="map"></div>
+
+<script>
+    const eventIcon = L.divIcon({
+        className: 'event-marker',
+        html: '<span>E</span>'
+    });
+    const palmIcon = L.divIcon({
+        className: 'palm-observation-marker',
+        html: '<span>P</span>'
+    });
+    const cycadIcon = L.divIcon({
+        className: 'cycad-observation-marker',
+        html: '<span>C</span>'
+    });
+
+
+    let map = L.map('map')
+        // default to San Antonio, TX
+        .setView([29.424, -98.491], 9);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // L.marker([51.5, -0.09]).addTo(map)
+    //     .bindPopup('A pretty CSS popup.<br> Easily customizable.')
+    //     .openPopup();
+
+    L.marker([0, 0], { icon: eventIcon }).addTo(map)
+
+
+    function setMapViewToUserLocation() {
+        function onGotUserCoords(position) {
+            console.log('got user coord', position.coords)
+            map.setView([position.coords.latitude, position.coords.longitude], 9);
+        }
+
+        function onFailedUserCoords(err) {
+            console.warn(`ERROR(${err.code}): ${err.message}`);
+        }
+
+        const options = {
+            enableHighAccuracy: false,
+            // only wait 3 seconds
+            timeout: 3000,
+            // if possible, use up to 30 minute old cache
+            maximumAge: 1000 * 60 * 30
+        };
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(onGotUserCoords, onFailedUserCoords, options)
+        }
+    }
+
+    async function getEventLocations() {
+        let response = await fetch('/api/event')
+        let data = await response.json()
+        //console.log('got event locations', data)
+        return data
+    }
+
+    function addEventMarkers(events) {
+        events.forEach(event => {
+            if (!event.latitude || !event.longitude)
+                return // continue the loop
+
+            //console.log('adding event marker', event.name)
+            if (event.last_modified) {
+                date = new Date(event.last_modified + ' UTC')
+                event.last_modified = date.toLocaleString()
+            }
+
+            L.marker([event.latitude, event.longitude], { icon: eventIcon }).addTo(map)
+                .bindPopup(`<strong>Event</strong>: ${event.name}
+                <br /><strong>Description</strong>: ${event.description}
+                <br /><strong>Who Reported</strong>: ${event.who_reported}
+                <br /><strong>Last Modified</strong>: ${event.last_modified}
+                <br /><strong>Who Modified</strong>: ${event.who_modified}
+                `);
+        })
+    }
+
+    async function getPalmObservations() {
+        let response = await fetch('/api/palm/observation')
+        let data = await response.json()
+        console.log('got palm observations', data)
+        return data
+    }
+
+    function addPalmObservationMarkers(palmObservations) {
+        palmObservations.forEach(palm => {
+            if (!palm.latitude || !palm.longitude)
+                return // continue the loop
+
+            //console.log('adding palm observation marker', palm.name)
+            if (palm.last_modified) {
+                date = new Date(palm.last_modified + ' UTC')
+                palm.last_modified = date.toLocaleString()
+            }
+
+            L.marker([palm.latitude, palm.longitude], { icon: eventIcon }).addTo(map)
+                .bindPopup(`
+                <strong>Name</strong>: ${palm.genus} ${palm.species} ${palm.variety}
+                <br /><strong>Common Name</strong>: ${palm.common_name}
+                <br /><strong>Location</strong>: ${palm.location}
+                <br /><strong>Damage</strong>: ${palm.damage_text}
+                <br /><strong>Description</strong>: ${palm.description}
+                <br /><strong>Event</strong>: ${event.name}
+                <br /><strong>Who Reported</strong>: ${palm.who_reported}
+                <br /><strong>Last Modified</strong>: ${palm.last_modified}
+                <br /><strong>Who Modified</strong>: ${palm.who_modified}
+                `);
+        })
+    }
+
+    window.onload = async () => {
+        setMapViewToUserLocation()
+
+        let events = await getEventLocations()
+        if (events.meta.total_results > 0)
+            addEventMarkers(events.records)
+
+        let palmObservations = await getPalmObservations()
+        if (palmObservations.meta.total_results > 0)
+            addPalmObservationMarkers(palmObservations.records)
+    }
+</script>
 
 {% endblock %}

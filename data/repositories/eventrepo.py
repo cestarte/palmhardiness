@@ -23,7 +23,17 @@ CREATE TABLE IF NOT EXISTS "Event" (
     "LocationId" integer,
     FOREIGN KEY (LocationId) REFERENCES "Location" (Id)
 );
-    """
+    """,
+
+    "get_all_count": """
+    SELECT COUNT(*) FROM [Event]
+    """,
+
+    "get_all": """
+    SELECT * 
+    FROM [Event], [Location] 
+    WHERE [Event].LocationId = [Location].Id
+    """,
 }
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Event]:
@@ -80,3 +90,26 @@ def write_to_database(database_path:str, events:list[Event]) -> None:
         if con:
             con.close()
 
+def read_from_row(row:sqlite3.Row) -> Event:
+    event = Event()
+    event.id = row['Id']
+    event.legacy_id = row['LegacyId']
+    event.city = row['City']
+    event.state = row['State']
+    event.country = row['Country']
+    event.name = row['Name']
+    event.description = row['Description']
+    event.who_reported = row['WhoReported']
+    event.last_modified = row['LastModified']
+    event.who_modified = row['WhoModified']
+    event.location_id = row['LocationId']
+
+    # Joined fields
+    if 'Latitude' in row.keys():
+        event.latitude = row['Latitude']
+    if 'Longitude' in row.keys():
+        event.longitude = row['Longitude']
+    if 'Geo' in row.keys():
+        event.geo = row['Geo']
+
+    return event
