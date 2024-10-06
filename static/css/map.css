@@ -1,0 +1,58 @@
+#map {
+    min-height: 180px;
+    height: 80vh;
+}
+
+.event-marker {
+    background-color: cornflowerblue;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    /* border-radius: 3rem 3rem 0; */
+    /* transform: rotate(90deg); */
+    border: 1px solid #FFFFFF
+}
+
+.event-marker span {
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    display: block;
+    /* transform: rotate(-45deg); */
+    margin-top: 0.1rem;
+    margin-left: 0.1rem;
+}
+
+.palm-observation-marker {
+    background-color: green;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    border-radius: 3rem 3rem;
+    border: 1px solid white;
+}
+
+.palm-observation-marker span {
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    display: block;
+    margin-top: 0;
+    margin-left: 0.4rem;
+}
+
+.cycad-observation-marker {
+    background-color: lawngreen;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    border-radius: .2rem .2rem;
+    border: 1px solid black;
+    transform: rotate(45deg);
+}
+
+.cycad-observation-marker span {
+    color: black;
+    font-size: 1rem;
+    font-weight: bold;
+    display: block;
+    margin-top: 0;
+    margin-left: 0.4rem;
+}

@@ -50,6 +50,43 @@ LEFT JOIN Damage on CycadObservation.DamageId = Damage.Id
 LEFT JOIN Location on CycadObservation.LocationId = Location.Id
 WHERE CycadId = ?
     """,
+
+
+    "get_all_count": """
+SELECT COUNT(*) FROM [CycadObservation]
+    """,
+
+    "get_all": """
+SELECT 
+    CycadObservation.Id
+    ,CycadObservation.CycadId
+    ,CycadObservation.Description
+    ,Damage.Text AS DamageText
+    ,CycadObservation.LowTemp
+    ,CycadObservation.EventId
+    ,CycadObservation.LAStModified
+    ,CycadObservation.WhoModified
+    ,CycadObservation.WhoReported
+    ,CycadObservation.Source
+    ,Cycad.Genus AS Genus
+    ,Cycad.Species AS Species
+    ,Cycad.CommonName AS CommonName
+    ,Cycad.Variety AS Variety
+    ,Event.Name AS EventName
+    ,Location.Id AS LocationId
+    ,Location.City AS City
+    ,Location.State AS State
+    ,Location.Country AS Country
+    ,Location.Latitude AS Latitude
+    ,Location.Longitude AS Longitude
+    ,Location.Geo AS Geo
+    ,'CycadObservation' AS [Type]
+FROM CycadObservation
+LEFT JOIN Cycad ON CycadObservation.CycadId = Cycad.Id
+LEFT JOIN Event ON CycadObservation.EventId = Event.Id
+LEFT JOIN Damage ON CycadObservation.DamageId = Damage.Id
+LEFT JOIN Location ON CycadObservation.LocationId = Location.Id
+    """,
 }
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> list[CycadObservation]:

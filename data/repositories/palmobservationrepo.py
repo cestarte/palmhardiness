@@ -52,7 +52,43 @@ LEFT JOIN Location on PalmObservation.LocationId = Location.Id
 WHERE PalmId = ?
     """,
 
+    "get_all_count": """
+SELECT COUNT(*) FROM [PalmObservation]
+    """,
+
+    "get_all": """
+SELECT 
+    PalmObservation.Id
+    ,PalmObservation.PalmId
+    ,PalmObservation.Description
+    ,Damage.Text AS DamageText
+    ,PalmObservation.LowTemp
+    ,PalmObservation.EventId
+    ,PalmObservation.LAStModified
+    ,PalmObservation.WhoModified
+    ,PalmObservation.WhoReported
+    ,PalmObservation.Source
+    ,Palm.Genus AS Genus
+    ,Palm.Species AS Species
+    ,Palm.CommonName AS CommonName
+    ,Palm.Variety AS Variety
+    ,Event.Name AS EventName
+    ,Location.Id AS LocationId
+    ,Location.City AS City
+    ,Location.State AS State
+    ,Location.Country AS Country
+    ,Location.Latitude AS Latitude
+    ,Location.Longitude AS Longitude
+    ,Location.Geo AS Geo
+    ,'PalmObservation' AS [Type]
+FROM PalmObservation
+LEFT JOIN Palm ON PalmObservation.PalmId = Palm.Id
+LEFT JOIN Event ON PalmObservation.EventId = Event.Id
+LEFT JOIN Damage ON PalmObservation.DamageId = Damage.Id
+LEFT JOIN Location ON PalmObservation.LocationId = Location.Id
+    """,
 }
+# REMOVE FROM MAP city, country, state, damage_legacy_id, event_legacy_id, location built from location, palm_legacy_id, legacy_id, 
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> list[PalmObservation]:
     items:list[PalmObservation] = []
@@ -238,8 +274,5 @@ def read_from_row(row:sqlite3.Row) -> PalmObservation:
     o.event_description = row['EventDescription']
     o.event_who_reported = row['EventWhoReported']
     o.damage_text = row['DamageText']
-    o.location_city = row['LocationCity']
-    o.location_state = row['LocationState']
-    o.location_country = row['LocationCountry']
 
     return o

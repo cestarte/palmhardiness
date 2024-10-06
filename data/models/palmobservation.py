@@ -20,6 +20,7 @@ class PalmObservation:
         self.low_temp:float
         self.last_modified:datetime = datetime.now(timezone.utc)
         self.who_modified:str = "Excel Importer"
+        self.location_id:int | None = None
 
         # These fields are not in the database
         self.event_name:str | None = None
@@ -27,6 +28,7 @@ class PalmObservation:
         self.event_who_reported:str | None = None
         self.damage_text:str | None = None
         self.location:str | None = None
+
     
 class PalmObservationSerializer(JSONEncoder):
     def default(self, o):
@@ -62,6 +64,7 @@ class PalmObservationSerializer(JSONEncoder):
                 "low_temp": o.low_temp,
                 "last_modified": o.last_modified,
                 "who_modified": o.who_modified,
+                "location_id": o.location_id,
 
                 # These fields are not in the database
                 "event_name": o.event_name,
