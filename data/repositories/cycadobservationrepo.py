@@ -64,7 +64,7 @@ SELECT
     ,Damage.Text AS DamageText
     ,CycadObservation.LowTemp
     ,CycadObservation.EventId
-    ,CycadObservation.LAStModified
+    ,CycadObservation.LastModified
     ,CycadObservation.WhoModified
     ,CycadObservation.WhoReported
     ,CycadObservation.Source

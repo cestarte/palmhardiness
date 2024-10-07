@@ -56,3 +56,15 @@
     margin-top: 0;
     margin-left: 0.4rem;
 }
+
+div .popup-record-detail {
+    margin-top: 0.5rem;
+    font-size: 0.6rem !important;
+    color: darkslategray !important;
+}
+
+.popup-record-detail strong {
+    margin-top: 0.5rem;
+    font-size: 0.6rem !important;
+    color: gray !important;
+}

@@ -64,7 +64,7 @@ SELECT
     ,Damage.Text AS DamageText
     ,PalmObservation.LowTemp
     ,PalmObservation.EventId
-    ,PalmObservation.LAStModified
+    ,PalmObservation.LastModified
     ,PalmObservation.WhoModified
     ,PalmObservation.WhoReported
     ,PalmObservation.Source
@@ -88,7 +88,6 @@ LEFT JOIN Damage ON PalmObservation.DamageId = Damage.Id
 LEFT JOIN Location ON PalmObservation.LocationId = Location.Id
     """,
 }
-# REMOVE FROM MAP city, country, state, damage_legacy_id, event_legacy_id, location built from location, palm_legacy_id, legacy_id, 
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int = 2) -> list[PalmObservation]:
     items:list[PalmObservation] = []

@@ -19,15 +19,6 @@
 <script src="{{ url_for('static', filename='js/leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('static', filename='js/map.js') }}"></script>
 <script>
-    let map = L.map('map')
-        // default to San Antonio, TX
-        .setView([29.424, -98.491], 9);
-
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-
     window.onload = async () => {
         setMapViewToUserLocation()
 
@@ -35,13 +26,13 @@
         if (events.meta.total_results > 0)
             addEventMarkers(events.records)
 
-        let palmObservations = await getPalmObservations()
+        let palmObservations = await getObservations('palm')
         if (palmObservations.meta.total_results > 0)
-            addPalmObservationMarkers(palmObservations.records)
+            addObservationMarkers(palmObservations.records, 'palm')
 
-        let cycadObservations = await getCycadObservations()
+        let cycadObservations = await getObservations('cycad')
         if (cycadObservations.meta.total_results > 0)
-            addCycadObservationMarkers(cycadObservations.records)
+            addObservationMarkers(cycadObservations.records, 'cycad')
     }
 </script>
 

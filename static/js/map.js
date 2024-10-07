@@ -3,6 +3,24 @@
  *   - Leaflet.js (global L)
  */
 
+const eventsLayerGroup = L.layerGroup()
+const palmObservationsLayerGroup = L.layerGroup()
+const cycadObservationsLayerGroup = L.layerGroup()
+
+let map = L.map('map')
+    .setView([29.424, -98.491], 9) // default to San Antonio, TX
+
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map)
+
+var layerControl = L.control.layers(null, null).addTo(map)
+layerControl.addOverlay(eventsLayerGroup, "Events", true)
+layerControl.addOverlay(palmObservationsLayerGroup, "Palm Observations")
+layerControl.addOverlay(cycadObservationsLayerGroup, "Cycad Observations")
+layerControl.addTo(map)
+eventsLayerGroup.addTo(map) // default 'on'
+
 const eventIcon = L.divIcon({
     className: 'event-marker',
     html: '<span>E</span>'
@@ -15,6 +33,8 @@ const cycadIcon = L.divIcon({
     className: 'cycad-observation-marker',
     html: '<span>C</span>'
 });
+
+
 
 
 function setMapViewToUserLocation() {
@@ -58,22 +78,33 @@ function addEventMarkers(events) {
             event.last_modified = date.toLocaleString()
         }
 
-        L.marker([event.latitude, event.longitude], { icon: eventIcon }).addTo(map)
+        let marker = L.marker([event.latitude, event.longitude], { icon: eventIcon })
             .bindPopup(`<strong>Event</strong>: ${event.name}
             <br /><strong>Description</strong>: ${event.description}
-            <br /><strong>Who Reported</strong>: ${event.who_reported}
-            <br /><strong>Last Modified</strong>: ${event.last_modified}
-            <br /><strong>Who Modified</strong>: ${event.who_modified}
+            <div class="popup-record-detail">
+                <strong>Who Reported</strong>: ${event.who_reported}
+                <br /><strong>Last Modified</strong>: ${event.last_modified}
+                <br /><strong>Who Modified</strong>: ${event.who_reported}
+            </div>
             `);
+        eventsLayerGroup.addLayer(marker)
     })
 }
 
-async function getPalmObservations() {
-    data = []
+async function getObservations(plantType) {
+    if (!plantType) {
+        console.error('No plant type provided. Expecting "palm" or "cycad".')
+        return
+    }
+
+    let data = []
+    plantType = plantType.toLowerCase()
+    const url = `/api/observation/${plantType}`
+
     try {
-        let response = await fetch('/api/observation/palm')
+        let response = await fetch(url)
         data = await response.json()
-        console.log('got palm observations', data)
+        //console.log(`got ${plantType} observations`, data)
     } catch (error) {
         console.error('Failed to fetch the observation data.', error)
     }
@@ -81,24 +112,28 @@ async function getPalmObservations() {
     return data
 }
 
-function addPalmObservationMarkers(palmObservations) {
-    if (!palmObservations) {
-        console.warning('No palm observations to add to the map.')
+function addObservationMarkers(observations, plantType) {
+    if (!plantType) {
+        console.error('No plant type provided. Expecting "palm" or "cycad".')
+        return
+    }
+    if (!observations) {
+        console.warning(`No ${plantType} observations to add to the map.`)
         return
     }
 
-    palmObservations.forEach(o => {
+    observations.forEach(o => {
         //console.log(o.PalmId, o.Latitude, o.Longitude)
         if (!o.Latitude || !o.Longitude)
             return // continue the loop
 
-        //console.log('adding palm observation marker', palm.name)
+        //console.log(`adding ${plantType} observation marker`, palm.name)
         if (o.LastModified) {
             date = new Date(o.LastModified + ' UTC')
             o.LastModified = date.toLocaleString()
         }
 
-        locationName = o.Country
+        let locationName = o.Country
         if (o.State && locationName)
             locationName += `, ${o.State}`
         else locationName = o.State
@@ -106,76 +141,35 @@ function addPalmObservationMarkers(palmObservations) {
             locationName += `, ${o.City}`
         else locationName = o.City
 
+        let plantName = o.Genus
+        if (o.Species)
+            plantName += ` ${o.Species}`
+        if (o.Variety)
+            plantName += ` ${o.Variety}`
+
+        let plantId = o.PalmId || o.CycadId
+
         let htmlPopupContent = `
-            <strong>Name</strong>: <a href="/palm/${o.PalmId}" target="_blank">${o.Genus} ${o.Species} ${o.Variety}</a>
+            <strong>Name</strong>: <a href="/${plantType}/${plantId}" target="_blank">${plantName}</a>
             <br /><strong>Common Name</strong>: ${o.CommonName || ''}
             <br /><strong>Low Temp</strong>: ${o.LowTemp}&nbsp°F (${((o.LowTemp - 32) * 5 / 9).toFixed(2)}&nbsp°C)
             <br /><strong>Damage</strong>: ${o.DamageText}
             <br /><strong>Description</strong>: ${o.Description | ''}
-            <br /><strong>Location</strong>: <a href="#">${locationName}</a>
-            <br /><strong>Event</strong>: <a href="#">${o.EventId}: ${o.EventName}</a>
-            <br /><strong>Who Reported</strong>: ${o.WhoReported}
-            <br /><strong>Last Modified</strong>: ${o.LastModified}
-            <br /><strong>Who Modified</strong>: ${o.WhoModified}
+            <br /><strong>Location</strong>: ${locationName}
+            <br /><strong>Event</strong>: (${o.EventId}): ${o.EventName}
             <br /><strong>Source</strong>: <a href="${o.Source}" target="_blank">${o.Source}</a>
+            <div class="popup-record-detail">
+                <strong>Who Reported</strong>: ${o.WhoReported}
+                <br /><strong>Last Modified</strong>: ${o.LastModified}
+                <br /><strong>Who Modified</strong>: ${o.WhoModified}
+            </div>
             `
-        L.marker([o.Latitude, o.Longitude], { icon: palmIcon }).addTo(map)
+
+        let marker = L.marker([o.Latitude, o.Longitude], { icon: plantType === 'palm' ? palmIcon : cycadIcon })
             .bindPopup(htmlPopupContent)
-    })
-}
 
-
-async function getCycadObservations() {
-    data = []
-    try {
-        let response = await fetch('/api/observation/cycad')
-        data = await response.json()
-        console.log('got cycad observations', data)
-    } catch (error) {
-        console.error('Failed to fetch the observation data.', error)
-    }
-
-    return data
-}
-
-function addCycadObservationMarkers(cycadObservations) {
-    if (!cycadObservations) {
-        console.warning('No cycad observations to add to the map.')
-        return
-    }
-
-    cycadObservations.forEach(o => {
-        //console.log(o.CycadId, o.Latitude, o.Longitude)
-        if (!o.Latitude || !o.Longitude)
-            return // continue the loop
-
-        if (o.LastModified) {
-            date = new Date(o.LastModified + ' UTC')
-            o.LastModified = date.toLocaleString()
-        }
-
-        locationName = o.Country
-        if (o.State && locationName)
-            locationName += `, ${o.State}`
-        else locationName = o.State
-        if (o.City)
-            locationName += `, ${o.City}`
-        else locationName = o.City
-
-        let htmlPopupContent = `
-            <strong>Name</strong>: <a href="/palm/${o.CycadId}" target="_blank">${o.Genus} ${o.Species} ${o.Variety}</a>
-            <br /><strong>Common Name</strong>: ${o.CommonName || ''}
-            <br /><strong>Low Temp</strong>: ${o.LowTemp}&nbsp°F (${((o.LowTemp - 32) * 5 / 9).toFixed(2)}&nbsp°C)
-            <br /><strong>Damage</strong>: ${o.DamageText}
-            <br /><strong>Description</strong>: ${o.Description | ''}
-            <br /><strong>Location</strong>: <a href="#">${locationName}</a>
-            <br /><strong>Event</strong>: <a href="#">${o.EventId}: ${o.EventName}</a>
-            <br /><strong>Who Reported</strong>: ${o.WhoReported}
-            <br /><strong>Last Modified</strong>: ${o.LastModified}
-            <br /><strong>Who Modified</strong>: ${o.WhoModified}
-            <br /><strong>Source</strong>: <a href="${o.Source}" target="_blank">${o.Source}</a>
-            `
-        L.marker([o.Latitude, o.Longitude], { icon: cycadIcon }).addTo(map)
-            .bindPopup(htmlPopupContent)
+        if (plantType === 'palm')
+            palmObservationsLayerGroup.addLayer(marker)
+        else cycadObservationsLayerGroup.addLayer(marker)
     })
 }
