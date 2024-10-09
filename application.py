@@ -15,22 +15,9 @@ from datasource_api import api as datasource_api
 from datasource_web import web as datasource_web
 import requests
 import sqlite3
-# origins=['http://localhost:5000', 'http://127.0.0.1:5000'],
 app = Flask(__name__)
-CORS(app, 
-    send_wildcard=True,
-    vary_header=True,
-    resources= {
-        r"/api/*": {"origins": "*"},
-        r"/*": {"origins": "*"}
-    })
-
-#put this snippet ahead of all your bluprints
-@app.after_request 
-def after_request(response):
-    header = response.headers
-    header['Access-Control-Allow-Origin'] = '*'
-    return response
+# https://flask-cors.readthedocs.io/en/latest/
+CORS(app, resources= { r"/api/*": {"origins": "*"}})
 
 app.config['Database'] = './palmhardiness.db'
 
@@ -76,4 +63,5 @@ def close_connection(exception):
         db.close()
 
 if __name__ == "__main__":
+    #app.run(ssl_context='adhoc', debug=True)
     app.run(debug=True)
