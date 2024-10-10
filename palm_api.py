@@ -1,19 +1,14 @@
 from flask import Blueprint, g, current_app, request
 import sqlite3
-from data.models.palm import Palm, PalmSerializer
-from data.models.palmobservation import PalmObservation, PalmObservationSerializer
-from data.models.lowestsurviving import LowestSurviving, LowestSurvivingSerializer
+from typing import Optional
+from util.api import is_arg_true, format_record, format_records, query_db
 from data.repositories import palmquestionrepo as palmquestionrepo
-from data.repositories import palmrepo as palm
-from data.repositories import palmobservationrepo as palmobservation
+from data.repositories import palmrepo as palmrepo
+from data.repositories import palmobservationrepo as palmobservationrepo
 import json
 import math
 
 api = Blueprint('palm_api', __name__)
-
-def is_arg_true(value:str) -> bool:
-    return value.lower() in ['true', 'yes', '1']
-
 
 @api.route('/', methods=['GET'])
 def get_all():
@@ -36,8 +31,8 @@ def get_all():
     total_records = 0
     records = 0
     record_offset = (page-1) * results_per_page
-    total_records = query_db(palm.queries['get_count'], (filter_unobserved, search_term), one=True)[0]
-    records = query_db(palm.queries['get_records'], (filter_unobserved, search_term, results_per_page, record_offset))
+    total_records = query_db(palmrepo.queries['get_count'], (filter_unobserved, search_term), one=True)[0]
+    records = query_db(palmrepo.queries['get_records'], (filter_unobserved, search_term, results_per_page, record_offset))
 
     total_pages = math.ceil(total_records / results_per_page)
     has_previous_page = False
@@ -49,17 +44,11 @@ def get_all():
     if total_pages > page:
         has_next_page = True
     
-    # convert records to objects so that they can be serialized to json
-    objects:list[Palm] = [palm.read_from_row(row) for row in records]
-    objects_json_string = json.dumps(objects, cls=PalmSerializer)
-    # convert string to json object so it can be returned in the response
-    objects_json = json.loads(objects_json_string)
-
     return {
-        'records': objects_json, 
+        'records': format_records(records),
         'meta': {
             'offset': record_offset, 
-            'results_on_this_page': len(objects), 
+            'results_on_this_page': len(records), 
             'total_results': total_records,
             'total_pages': total_pages,
             'has_previous_page': has_previous_page,
@@ -72,19 +61,13 @@ def get_all():
 
 @api.route('/<int:palm_id>', methods=['GET'])
 def get_one(palm_id):
-    record = query_db(query=palm.queries['get_one'], args=(palm_id,), one=True)
-    if record is not None:
-        obj = palm.read_from_row(record)
-        return json.dumps(obj, cls=PalmSerializer)
-    return json.dumps(None)
+    record = query_db(query=palmrepo.queries['get_one'], args=(palm_id,), one=True)
+    return format_record(record)
 
 @api.route('/<int:palm_id>/observations', methods=['GET'])
 def get_observations(palm_id):
-    records = query_db(query=palmobservation.queries['get_all_for_palm'], args=(palm_id,))
-    objects:list[PalmObservation] = [palmobservation.read_from_row(row) for row in records]
-    objects_json_string = json.dumps(objects, cls=PalmObservationSerializer)
-    objects_json = json.loads(objects_json_string)
-    return objects_json
+    records = query_db(query=palmobservationrepo.queries['get_all_for_palm'], args=(palm_id,))
+    return format_records(records)
 
 @api.route('/lowestsurviving', methods=['GET'])
 def get_lowest_surviving():
@@ -119,17 +102,11 @@ def get_lowest_surviving():
     if total_pages > page:
         has_next_page = True
     
-    # convert records to objects so that they can be serialized to json
-    objects:list[LowestSurviving] = [palmquestionrepo.read_lowest_surviving_from_row(row) for row in records]
-    objects_json_string = json.dumps(objects, cls=LowestSurvivingSerializer)
-    # convert string to json object so it can be returned in the response
-    objects_json = json.loads(objects_json_string)
-
     return {
-        'records': objects_json, 
+        'records': format_records(records), 
         'meta': {
             'offset': record_offset, 
-            'results_on_this_page': len(objects), 
+            'results_on_this_page': len(records), 
             'total_results': total_records,
             'total_pages': total_pages,
             'has_previous_page': has_previous_page,
@@ -142,20 +119,12 @@ def get_lowest_surviving():
 
 @api.route('/<int:palm_id>/stat/<stat_name>', methods=['GET'])
 def get_stat(palm_id, stat_name):
-    record = query_db(palm.queries[f'get_stat_{stat_name}'], (palm_id,), one=True)
-    if record is not None and record['value'] is not None:
-        return json.loads(f'{{"value": "{str(record["value"])}"}}')
-    return json.loads(None)
+    record:Optional[sqlite3.row]
+    try:
+        record = query_db(palmrepo.queries[f'get_stat_{stat_name}'], (palm_id,), one=True)
+    except KeyError:
+        record = None
+    except TypeError:
+        record = None
 
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(current_app.config['Database'])
-        db.row_factory = sqlite3.Row
-    return db
-
-def query_db(query, args=(), one=False):
-    cur = get_db().execute(query, args)
-    rv = cur.fetchall()
-    cur.close()
-    return (rv[0] if rv else None) if one else rv
+    return format_record(record) if record is not None else json.loads('{"value": null}')

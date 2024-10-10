@@ -39,12 +39,13 @@ CREATE TABLE IF NOT EXISTS "PalmObservation" (
 SELECT PalmObservation.*
     ,Event.Name as EventName
     ,Event.Description as EventDescription
-    ,Event.WhoReported as EventWhoReported
+    ,Event.Id AS EventId
     ,Damage.Text as DamageText
     ,Location.City as LocationCity
     ,Location.State as LocationState
     ,Location.Country as LocationCountry
     ,Location.Id as LocationId
+	,TRIM(COALESCE(Location.City, '') || ', ' || COALESCE(Location.State, '') || ', ' || COALESCE(Location.Country, ''), ', ') AS LocationName
 FROM PalmObservation
 LEFT JOIN Event on PalmObservation.EventId = Event.Id
 LEFT JOIN Damage on PalmObservation.DamageId = Damage.Id
@@ -72,6 +73,7 @@ SELECT
     ,Palm.Species AS Species
     ,Palm.CommonName AS CommonName
     ,Palm.Variety AS Variety
+    ,TRIM(COALESCE(Palm.Genus, '') || ' ' || COALESCE(Palm.Species, '') || ' ' || COALESCE(Palm.Variety, '')) AS PalmName
     ,Event.Name AS EventName
     ,Location.Id AS LocationId
     ,Location.City AS City
@@ -80,6 +82,7 @@ SELECT
     ,Location.Latitude AS Latitude
     ,Location.Longitude AS Longitude
     ,Location.Geo AS Geo
+	,TRIM(COALESCE(Location.City, '') || ', ' || COALESCE(Location.State, '') || ', ' || COALESCE(Location.Country, ''), ', ') AS LocationName
     ,'PalmObservation' AS [Type]
 FROM PalmObservation
 LEFT JOIN Palm ON PalmObservation.PalmId = Palm.Id

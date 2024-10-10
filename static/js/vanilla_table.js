@@ -414,6 +414,11 @@ class VanillaTable {
 
             return value
         },
+        link: (value) => {
+            if (value)
+                return `<a href="${value}" target="_blank">${value}</a>`
+            else return value
+        }
     }
 
     refreshTable(observations) {

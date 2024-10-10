@@ -7,42 +7,43 @@ queries = {
     "get_count": """
 SELECT COUNT(*) as count
 FROM (
-        WITH varCTE AS (SELECT ? AS varFilterObserved, UPPER(?) AS varTerm)
+        WITH vars AS (SELECT ? AS filterObserved, UPPER(?) AS term)
         SELECT COUNT(*) as ObservationCount
-        FROM Palm, varCTE
+        FROM Palm, vars
         LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
         LEFT JOIN PalmObservation ON Palm.Id = PalmObservation.PalmId
         -- Allow unobserved unless we are filtering them out
-        WHERE (PalmObservation.Id IS NOT NULL OR varFilterObserved = 0)
+        WHERE (PalmObservation.Id IS NOT NULL OR filterObserved = 0)
         -- If there is a search term, then filter on it
-            AND (varTerm is NULL 
-                OR INSTR(UPPER(Genus), varTerm) > 0 
-                OR INSTR(UPPER(Species), varTerm) > 0 
-                OR INSTR(UPPER(Variety), varTerm) > 0 
-                OR INSTR(UPPER(CommonName), varTerm) > 0
-                OR INSTR(UPPER(Zone.Name), varTerm) > 0
+            AND (term is NULL 
+                OR INSTR(UPPER(Genus), term) > 0 
+                OR INSTR(UPPER(Species), term) > 0 
+                OR INSTR(UPPER(Variety), term) > 0 
+                OR INSTR(UPPER(CommonName), term) > 0
+                OR INSTR(UPPER(Zone.Name), term) > 0
     )
     GROUP BY Palm.Id
 )
     """,
 
     "get_records": """
-WITH varCTE AS (SELECT ? AS varFilterObserved, UPPER(?) AS varTerm)
+WITH vars AS (SELECT ? AS filterObserved, UPPER(?) AS term)
 SELECT Palm.*
+    ,TRIM(COALESCE(Genus, '') || ' ' || COALESCE(Species, '') || ' ' || COALESCE(Variety, ''))  AS LongName
     ,Zone.Name as ZoneName
     ,COUNT(PalmObservation.Id) as ObservationCount
-FROM Palm, varCTE
+FROM Palm, vars
 LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
 LEFT JOIN PalmObservation ON Palm.Id = PalmObservation.PalmId
 -- Allow unobserved unless we are filtering them out
-WHERE (PalmObservation.Id IS NOT NULL OR varFilterObserved = 0)
+WHERE (PalmObservation.Id IS NOT NULL OR filterObserved = 0)
 -- If there is a search term, then filter on it
-    AND (varTerm is NULL 
-        OR INSTR(UPPER(Genus), varTerm) > 0 
-        OR INSTR(UPPER(Species), varTerm) > 0 
-        OR INSTR(UPPER(Variety), varTerm) > 0 
-        OR INSTR(UPPER(CommonName), varTerm) > 0
-        OR INSTR(UPPER(Zone.Name), varTerm) > 0
+    AND (term is NULL 
+        OR INSTR(UPPER(Genus), term) > 0 
+        OR INSTR(UPPER(Species), term) > 0 
+        OR INSTR(UPPER(Variety), term) > 0 
+        OR INSTR(UPPER(CommonName), term) > 0
+        OR INSTR(UPPER(Zone.Name), term) > 0
     )
 GROUP BY Palm.Id
 ORDER BY Genus, Species, Variety
@@ -52,6 +53,7 @@ LIMIT ? OFFSET ?
 
     "get_one": """
 SELECT Palm.*
+    ,TRIM(COALESCE(Palm.Genus, '') || ' ' || COALESCE(Palm.Species, '') || ' ' || COALESCE(Palm.Variety, '')) AS PalmName
     ,Zone.Name as ZoneName
 	,(SELECT COUNT(*) 
 		FROM PalmObservation
@@ -96,7 +98,12 @@ LIMIT ? OFFSET ?
     """,
 
     "get_observations_for_palm": """
-SELECT PalmObservation.*
+SELECT PalmObservation.LegacyId
+	,PalmObservation.LastModified
+	,PalmObservation.WhoModified
+	,PalmObservation.WhoReported
+	,PalmObservation.LowTemp
+    ,TRIM(COALESCE(Palm.Genus, '') || ' ' || COALESCE(Palm.Species, '') || ' ' || COALESCE(Palm.Variety, '')) AS PalmName
     ,Palm.LegacyId as PalmLegacyId
     ,Palm.Genus as PalmGenus
     ,Palm.Species as PalmSpecies
@@ -104,11 +111,18 @@ SELECT PalmObservation.*
     ,Palm.CommonName as PalmCommonName
     ,Palm.ZoneId as PalmZoneId
     ,Zone.Name as ZoneName
+    ,Location.City as LocationCity
+    ,Location.State as LocationState
+    ,Location.Country as LocationCountry
+    ,Location.Latitude AS LocationLatitude
+    ,Location.Longitude AS LocationLongitude
+	,TRIM(COALESCE(Location.City, '') || ', ' || COALESCE(Location.State, '') || ', ' || COALESCE(Location.Country, ''), ', ') AS LocationName
 FROM PalmObservation
 LEFT JOIN Palm ON PalmObservation.PalmId = Palm.Id
 LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
+LEFT JOIN Location ON PalmObservation.LocationId = Location.Id
 WHERE PalmObservation.PalmId = ?
-ORDER BY PalmObservation.ObservationDate DESC
+ORDER BY PalmObservation.LowTemp DESC
     """,
 
     "get_stat_LOWESTSURVIVED": """
@@ -169,23 +183,6 @@ ORDER BY [count] DESC
 LIMIT 1
     """,
 }
-
-def read_from_row(row:sqlite3.Row) -> Palm:
-    palm = Palm()
-    palm.id = row["Id"]
-    palm.legacy_id = row["LegacyId"]
-    palm.genus = row["Genus"]
-    palm.species = row["Species"]
-    palm.variety = row["Variety"]
-    palm.common_name = row["CommonName"]
-    palm.zone_id = row["ZoneId"]
-    palm.last_modified = row["LastModified"]
-    palm.who_modified = row["WhoModified"]
-    if hasattr(palm, 'zone_name') and 'ZoneName' in row.keys():
-        palm.zone_name = row["ZoneName"]
-    if hasattr(palm, 'observation_count') and 'ObservationCount' in row.keys():
-        palm.observation_count = row["ObservationCount"]
-    return palm
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Palm]:
     palms:list[Palm] = []

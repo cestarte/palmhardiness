@@ -18,41 +18,15 @@ window.onload = async function () {
                 }
             },
             {
-                'name': 'genus',
-                'label': 'Genus'
+                'name': 'longname',
+                'label': 'Genus, Species, Variety'
             },
             {
-                'name': 'species',
-                'label': 'Species'
+                'name': 'commonname',
+                'label': 'Common Name'
             },
             {
-                'name': 'variety',
-                'label': 'Variety'
-            },
-            {
-                'name': 'common_name',
-                'label': 'Common Name',
-                'editable': true,
-                'onEdit': function (name, oldValue, newValue, row, col) {
-                    //if a different row is dirty, prevent editing
-                    // if this row has been edited, check if the value is changed
-                    if (oldValue !== newValue) {
-                        // row is dirty
-                    }
-                    // if the value is changed, check if it is valid
-
-                    // if the value is invalid, display an 
-
-                    if (validateCommonName(newValue)) {
-                        console.log(`onEdit: ${name} = ${newValue}`, oldValue, row, col)
-                    } else {
-                        alert('Invalid common name')
-                        return false
-                    }
-                }
-            },
-            {
-                'name': 'zone_name',
+                'name': 'zonename',
                 'custom_label': `                   
                 <div class="dropdown is-hoverable">
                     <div class="dropdown-trigger">
@@ -71,14 +45,10 @@ window.onload = async function () {
                         </div>
                     </div>
                 </div>`,
-                'editable': true,
-                'onEdit': function (name, oldValue, newValue, row, col) {
-                    console.log(`onEdit: ${name} = ${newValue}`, oldValue, row, col)
-                }
             },
             {
-                'name': 'observation_count',
-                'label': '# Observations'
+                'name': 'observationcount',
+                'label': 'Observations'
             }
         ]
     }

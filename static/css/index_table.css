@@ -1,5 +1,6 @@
 #observation-table th {
     white-space: nowrap;
+    color: black !important;
 }
 
 /* id */
