@@ -1,17 +1,13 @@
-from flask import Blueprint, g, current_app, request
 import sqlite3
-from data.models.cycad import Cycad, CycadSerializer
-from data.models.cycadobservation import CycadObservation, CycadObservationSerializer
-from data.repositories import cycadrepo as cycad
-from data.repositories import cycadobservationrepo as cycadobservation
 import json
 import math
+from flask import Blueprint, g, current_app, request
+from util.api import is_arg_true, query_db, format_record, format_records
+from data.models.cycad import Cycad
+from data.repositories import cycadrepo
+from data.repositories import cycadobservationrepo
 
 api = Blueprint('cycad_api', __name__)
-
-def is_arg_true(value:str) -> bool:
-    return value.lower() in ['true', 'yes', '1']
-
 
 @api.route('/', methods=['GET'])
 def get_all():
@@ -34,8 +30,8 @@ def get_all():
     total_records = 0
     records = 0
     record_offset = (page-1) * results_per_page
-    total_records = query_db(cycad.queries['get_count'], (filter_unobserved, search_term), one=True)[0]
-    records = query_db(cycad.queries['get_records'], (filter_unobserved, search_term, results_per_page, record_offset))
+    total_records = query_db(cycadrepo.queries['get_count'], (filter_unobserved, search_term), one=True)[0]
+    records = query_db(cycadrepo.queries['get_records'], (filter_unobserved, search_term, results_per_page, record_offset))
 
     total_pages = math.ceil(total_records / results_per_page)
     has_previous_page = False
@@ -47,17 +43,11 @@ def get_all():
     if total_pages > page:
         has_next_page = True
     
-    # convert records to objects so that they can be serialized to json
-    objects:list[Cycad] = [cycad.read_from_row(row) for row in records]
-    objects_json_string = json.dumps(objects, cls=CycadSerializer)
-    # convert string to json object so it can be returned in the response
-    objects_json = json.loads(objects_json_string)
-
     return {
-        'records': objects_json, 
+        'records': format_records(records), 
         'meta': {
             'offset': record_offset, 
-            'results_on_this_page': len(objects), 
+            'results_on_this_page': len(records), 
             'total_results': total_records,
             'total_pages': total_pages,
             'has_previous_page': has_previous_page,
@@ -97,29 +87,11 @@ def get_all():
 
 @api.route('/<int:cycad_id>', methods=['GET'])
 def get_one(cycad_id):
-    record = query_db(query=cycad.queries['get_one'], args=(cycad_id,), one=True)
-    if record is not None:
-        obj = cycad.read_from_row(record)
-        return json.dumps(obj, cls=CycadSerializer)
-    return json.dumps(None)
+    record = query_db(query=cycadrepo.queries['get_one'], args=(cycad_id,), one=True)
+    return format_record(record)
 
 @api.route('/<int:cycad_id>/observations', methods=['GET'])
 def get_observations(cycad_id):
-    records = query_db(query=cycadobservation.queries['get_all_for_cycad'], args=(cycad_id,))
-    objects:list[CycadObservation] = [cycadobservation.read_from_row(row) for row in records]
-    objects_json_string = json.dumps(objects, cls=CycadObservationSerializer)
-    objects_json = json.loads(objects_json_string)
-    return objects_json
+    records = query_db(query=cycadobservationrepo.queries['get_all_for_cycad'], args=(cycad_id,))
+    return format_records(records)
 
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(current_app.config['Database'])
-        db.row_factory = sqlite3.Row
-    return db
-
-def query_db(query, args=(), one=False):
-    cur = get_db().execute(query, args)
-    rv = cur.fetchall()
-    cur.close()
-    return (rv[0] if rv else None) if one else rv

@@ -1,13 +1,13 @@
 {% extends "layout.html" %}
-{% block title %}{{data.cycad_name}}{% endblock %}
+{% block title %}{{data.cycadname}}{% endblock %}
 {% block head %}
 <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 {% endblock %}
 {% block header %}
 <section class=" hero is-primary">
     <div class="hero-body">
-        <p class="title">{{ data.cycad_name }}</p>
-        <p class="subtitle">{{ data.common_name if data.common_name is not none }}</p>
+        <p class="title">{{ data.cycadname }}</p>
+        <p class="subtitle">{{ data.commonname if data.commonname is not none }}</p>
     </div>
 </section>
 {% endblock %}
@@ -30,17 +30,17 @@
                         usda.gov</a>
                 </div>
             </div>
-        </div> <span class="ml-2">{{data.zone_name}}</span>
+        </div> <span class="ml-2">{{data.zonename}}</span>
     </div>
 
     &nbsp;
 
     <a target="_blank"
-        href="https://www.palmtalk.org/forum/search/?&q=%22{{data.cycad_name}}%22&quick=1&search_and_or=or&sortby=relevancy">
+        href="https://www.palmtalk.org/forum/search/?&q=%22{{data.cycadname}}%22&quick=1&search_and_or=or&sortby=relevancy">
         <i class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmTalk</a>
     &nbsp;
 
-    <a target="_blank" href="https://palmpedia.net/wiki/index.php5?search={{data.cycad_name}}">
+    <a target="_blank" href="https://palmpedia.net/wiki/index.php5?search={{data.cycadname}}">
         <i class="fa-solid fa-arrow-up-right-from-square"></i> Search PalmPedia</a></p>
 </div>
 
@@ -76,11 +76,11 @@
             'table_placeholder': 'observation-table',
             'columns': [
                 {
-                    'name': 'location',
+                    'name': 'locationname',
                     'label': 'Location',
                 },
                 {
-                    'name': 'low_temp',
+                    'name': 'lowtemp',
                     'label': 'Low Temp',
                     'custom_body': (record, columnName, $cell) => {
                         const id = VanillaTable.generateId()
@@ -93,7 +93,7 @@
                     }
                 },
                 {
-                    'name': 'damage_text',
+                    'name': 'damagetext',
                     'label': 'Damage'
                 },
                 {
@@ -106,28 +106,26 @@
                     }
                 },
                 {
-                    'name': 'event_name',
+                    'name': 'eventname',
                     'label': 'Event Name',
                 },
                 {
-                    'name': 'event_description',
+                    'name': 'eventdescription',
                     'label': 'Event Description',
                     'formatters': ['max_len', 'text'],
                     'on_click': (record, columnName, $cell) => {
                         if (record[columnName] && record[columnName].length > 100)
-                            createModal(null, record['event_name'], record[columnName], '')
+                            createModal(null, record['eventname'], record[columnName], '')
                     }
                 },
                 {
-                    'name': 'event_who_reported',
-                    'label': 'Event Reported By'
+                    'name': 'eventwhoreported',
+                    'label': 'Event Reporter'
                 },
                 {
                     'name': 'source',
                     'label': 'Source',
-                    'custom_body': (record, columnName) => {
-                        return `<a href="${record.source}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> ${record.source}</a>`
-                    }
+                    'formatters': ['link'],
                 }
             ]
         }

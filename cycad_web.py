@@ -40,6 +40,8 @@ def index():
 def detail(cycad_id):
     api_response = requests.get(f'http://127.0.0.1:5000/api/cycad/{cycad_id}')
     api_json = api_response.json()
+    print('[[[api_json]]]', api_json)
+
 
     if api_response.status_code == 200 and api_json is not None:
             return render_template('cycad_detail.html', data=api_json)

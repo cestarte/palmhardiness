@@ -7,42 +7,43 @@ queries = {
     "get_count": """
 SELECT COUNT(*) as count
 FROM (
-        WITH varCTE AS (SELECT ? AS varFilterObserved, UPPER(?) AS varTerm)
+        WITH vars AS (SELECT ? AS filterObserved, UPPER(?) AS term)
         SELECT COUNT(*) as ObservationCount
-        FROM Cycad, varCTE
+        FROM Cycad, vars
         LEFT JOIN Zone ON Cycad.ZoneId = Zone.Id
         LEFT JOIN CycadObservation ON Cycad.Id = CycadObservation.CycadId
         -- Allow unobserved unless we are filtering them out
-        WHERE (CycadObservation.Id IS NOT NULL OR varFilterObserved = 0)
+        WHERE (CycadObservation.Id IS NOT NULL OR filterObserved = 0)
         -- If there is a search term, then filter on it
-            AND (varTerm is NULL 
-                OR INSTR(UPPER(Genus), varTerm) > 0 
-                OR INSTR(UPPER(Species), varTerm) > 0 
-                OR INSTR(UPPER(Variety), varTerm) > 0 
-                OR INSTR(UPPER(CommonName), varTerm) > 0
-                OR INSTR(UPPER(Zone.Name), varTerm) > 0
+            AND (term is NULL 
+                OR INSTR(UPPER(Genus), term) > 0 
+                OR INSTR(UPPER(Species), term) > 0 
+                OR INSTR(UPPER(Variety), term) > 0 
+                OR INSTR(UPPER(CommonName), term) > 0
+                OR INSTR(UPPER(Zone.Name), term) > 0
     )
     GROUP BY Cycad.Id
 )
     """,
 
     "get_records": """
-WITH varCTE AS (SELECT ? AS varFilterObserved, UPPER(?) AS varTerm)
+WITH vars AS (SELECT ? AS filterObserved, UPPER(?) AS term)
 SELECT Cycad.*
+    ,TRIM(COALESCE(Genus, '') || ' ' || COALESCE(Species, '') || ' ' || COALESCE(Variety, ''))  AS CycadName
     ,Zone.Name as ZoneName
     ,COUNT(CycadObservation.Id) as ObservationCount
-FROM Cycad, varCTE
+FROM Cycad, vars
 LEFT JOIN Zone ON Cycad.ZoneId = Zone.Id
 LEFT JOIN CycadObservation ON Cycad.Id = CycadObservation.CycadId
 -- Allow unobserved unless we are filtering them out
-WHERE (CycadObservation.Id IS NOT NULL OR varFilterObserved = 0)
+WHERE (CycadObservation.Id IS NOT NULL OR filterObserved = 0)
 -- If there is a search term, then filter on it
-    AND (varTerm is NULL 
-        OR INSTR(UPPER(Genus), varTerm) > 0 
-        OR INSTR(UPPER(Species), varTerm) > 0 
-        OR INSTR(UPPER(Variety), varTerm) > 0 
-        OR INSTR(UPPER(CommonName), varTerm) > 0
-        OR INSTR(UPPER(Zone.Name), varTerm) > 0
+    AND (term is NULL 
+        OR INSTR(UPPER(Genus), term) > 0 
+        OR INSTR(UPPER(Species), term) > 0 
+        OR INSTR(UPPER(Variety), term) > 0 
+        OR INSTR(UPPER(CommonName), term) > 0
+        OR INSTR(UPPER(Zone.Name), term) > 0
     )
 GROUP BY Cycad.Id
 ORDER BY Genus, Species, Variety

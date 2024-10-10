@@ -44,6 +44,7 @@ SELECT CycadObservation.*
     ,Location.State as LocationState
     ,Location.Country as LocationCountry
     ,Location.Id as LocationId
+	,TRIM(COALESCE(Location.City, '') || ', ' || COALESCE(Location.State, '') || ', ' || COALESCE(Location.Country, ''), ', ') AS LocationName
 FROM CycadObservation
 LEFT JOIN Event on CycadObservation.EventId = Event.Id
 LEFT JOIN Damage on CycadObservation.DamageId = Damage.Id
@@ -72,6 +73,7 @@ SELECT
     ,Cycad.Species AS Species
     ,Cycad.CommonName AS CommonName
     ,Cycad.Variety AS Variety
+    ,TRIM(COALESCE(Genus, '') || ' ' || COALESCE(Species, '') || ' ' || COALESCE(Variety, ''))  AS CycadName
     ,Event.Name AS EventName
     ,Location.Id AS LocationId
     ,Location.City AS City
@@ -80,6 +82,7 @@ SELECT
     ,Location.Latitude AS Latitude
     ,Location.Longitude AS Longitude
     ,Location.Geo AS Geo
+	,TRIM(COALESCE(Location.City, '') || ', ' || COALESCE(Location.State, '') || ', ' || COALESCE(Location.Country, ''), ', ') AS LocationName
     ,'CycadObservation' AS [Type]
 FROM CycadObservation
 LEFT JOIN Cycad ON CycadObservation.CycadId = Cycad.Id
