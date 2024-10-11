@@ -415,7 +415,20 @@ class VanillaTable {
             return value
         },
         link: (value) => {
-            if (value)
+            if (!value) return ''
+
+            function isUrl(s) {
+                let parsedUrl
+                try {
+                    parsedUrl = new URL(s)
+                } catch {
+                    return false;
+                }
+                return parsedUrl.toString() === s
+                    && !parsedUrl.pathname.includes("//")
+            }
+
+            if (isUrl(value))
                 return `<a href="${value}" target="_blank">${value}</a>`
             else return value
         }

@@ -2,7 +2,6 @@ from flask import Blueprint, g, current_app, request
 import sqlite3
 from typing import Optional
 from util.api import is_arg_true, format_record, format_records, query_db
-from data.repositories import palmquestionrepo as palmquestionrepo
 from data.repositories import palmrepo as palmrepo
 from data.repositories import palmobservationrepo as palmobservationrepo
 import json
@@ -89,8 +88,8 @@ def get_lowest_surviving():
     total_records = 0
     records = 0
     record_offset = (page-1) * results_per_page
-    total_records = query_db(palmquestionrepo.queries['get_count_lowest_surviving_for_all_palms'], args=(search_term,), one=True)[0]
-    records = query_db(palmquestionrepo.queries['get_lowest_surviving_for_all_palms'], (search_term, results_per_page, record_offset))
+    total_records = query_db(palmrepo.queries['get_count_lowest_surviving_for_all_palms'], args=(search_term,), one=True)[0]
+    records = query_db(palmrepo.queries['get_lowest_surviving_for_all_palms'], (search_term, results_per_page, record_offset))
 
     total_pages = math.ceil(total_records / results_per_page)
     has_previous_page = False

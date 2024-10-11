@@ -33,6 +33,9 @@ class StatCard {
     }
 
     setValue($card, value) {
+        if (value === null || value === undefined)
+            value = 'N/A'
+
         let $value = $card.querySelector('.value')
         $value.style.fontSize = `${this.calcRems(value.length)}`
         $value.innerHTML = value
@@ -43,12 +46,12 @@ class StatCard {
         //$card.classList.add('box')//'is-justify-content-space-between'
         $card.innerHTML = `
             <div class="stat-body">
-                <div class="">
+                <div class="has-text-centered">
                     <p class="has-text-centered has-text-weight-bold value" style="font-size:${this.calcRems(value.length)};">${value}</p>
                 </div>
             </div>
             <footer class="">
-                <div class="">
+                <div class="has-text-centered">
                     <p class="has-text-centered has-text-weight-normal style="white-space: nowrap;">${title}</p>
                 </div>
             </footer>

@@ -18,16 +18,8 @@ window.onload = async function () {
                 }
             },
             {
-                'name': 'genus',
-                'label': 'Genus'
-            },
-            {
-                'name': 'species',
-                'label': 'Species'
-            },
-            {
-                'name': 'variety',
-                'label': 'Variety'
+                'name': 'cycadname',
+                'label': 'Genus, Species, Variety'
             },
             {
                 'name': 'commonname',

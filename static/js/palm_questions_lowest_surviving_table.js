@@ -18,12 +18,8 @@ window.onload = async function () {
                 }
             },
             {
-                'name': 'genus',
-                'label': 'Genus'
-            },
-            {
-                'name': 'species',
-                'label': 'Species'
+                'name': 'palmname',
+                'label': 'Genus, Species'
             },
             {
                 'name': 'min',

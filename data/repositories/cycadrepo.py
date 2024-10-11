@@ -53,6 +53,7 @@ LIMIT ? OFFSET ?
 
     "get_one": """
 SELECT Cycad.*
+    ,TRIM(COALESCE(Genus, '') || ' ' || COALESCE(Species, '') || ' ' || COALESCE(Variety, ''))  AS CycadName
     ,Zone.Name as ZoneName
 	,(SELECT COUNT(*) 
 		FROM CycadObservation

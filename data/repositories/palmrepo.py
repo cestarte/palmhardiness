@@ -125,11 +125,58 @@ WHERE PalmObservation.PalmId = ?
 ORDER BY PalmObservation.LowTemp DESC
     """,
 
+  "get_count_lowest_surviving_for_all_palms": """
+SELECT COUNT(*)
+FROM (
+  WITH vars AS (SELECT UPPER(?) AS term)
+  SELECT 
+    P.Id
+    ,P.Genus
+    ,P.Species
+  FROM PalmObservation AS O, vars
+    INNER JOIN Palm AS P ON O.PalmId = P.Id
+    INNER JOIN Damage AS D ON O.DamageId = D.Id
+  WHERE UPPER(D.Text) NOT LIKE 'DEATH'
+    AND UPPER(D.Text) NOT LIKE 'NO CONFIRMATION%'
+    AND (term is NULL 
+        OR INSTR(UPPER(Genus), term) > 0 
+        OR INSTR(UPPER(Species), term) > 0)
+  GROUP BY Genus, Species
+)
+""",
+
+  "get_lowest_surviving_for_all_palms": """
+WITH vars AS (SELECT UPPER(?) AS term)
+SELECT 
+  P.Id
+  ,D.Text
+  ,P.Genus
+  ,P.Species
+  ,TRIM(COALESCE(Genus, '') || ' ' || COALESCE(Species, '')) AS PalmName
+  ,MIN(O.LowTemp) AS [Min]
+  ,MAX(O.LowTemp) AS [Max]
+  ,ROUND(AVG(O.LowTemp), 2) AS [Average]
+  ,COUNT(*) AS [Records]
+FROM PalmObservation AS O, vars
+  INNER JOIN Palm AS P ON O.PalmId = P.Id
+  INNER JOIN Damage AS D ON O.DamageId = D.Id
+WHERE UPPER(D.Text) NOT LIKE 'DEATH'
+  AND UPPER(D.Text) NOT LIKE 'NO CONFIRMATION'
+  AND (term is NULL 
+      OR INSTR(UPPER(Genus), term) > 0 
+      OR INSTR(UPPER(Species), term) > 0)
+GROUP BY Genus, Species
+ORDER BY  Genus ASC, Species ASC, [Min] ASC
+LIMIT ? OFFSET ?
+    """,
+
     "get_stat_LOWESTSURVIVED": """
 SELECT MIN(o.LowTemp) AS [value]
 FROM PalmObservation AS o
 INNER JOIN Palm AS p ON o.PalmId = p.Id
+INNER JOIN Damage AS d ON o.DamageId = d.Id
 WHERE p.Id = ?
+    AND (UPPER(d.Text) NOT LIKE 'DEATH' AND UPPER(d.Text) NOT LIKE 'NO CONFIRMATION')
     """,
 
     "get_stat_NUMOBSERVATIONS": """

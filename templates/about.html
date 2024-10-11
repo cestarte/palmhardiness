@@ -12,12 +12,13 @@
 
 <h1 class="is-size-4">What is all this?</h1>
 <p class="mt-2">
-    Palm enthusiasts the world over are sharing their observations online in forums!
-    Have you ever tried to recall specifically what you read in a forum a month ago?
+    Palm enthusiasts the world over are sharing their observations online in forums.
+    That's wonderful! But have you ever tried to recall the details you read in that
+    thread a month ago?
     A large effort has been made to collect and organize this data by <a
         href="https://www.palmtalk.org/forum/profile/5832-kinzyjr/">kinzyjr</a>.
     This goal of this app is to provide a web interface on top of that collected
-    data set, making it more easily accessible, with links back to the source
+    data set to make it more easily accessible, with links back to the source
     for further reading.
 </p>
 <p class="mt-2">The data was gathered from various sources by <a
@@ -30,16 +31,61 @@
             class="fa-solid fa-link is-size-6 has-text-grey-lighter"></i></a> How can
     I
     contribute?</h1>
-<p class="mt-2">The best way to share your own observations is to post about them on the <a
-        href="http://palmtalk.com">PalmTalk</a> forum. Make a thread about your experience and share pictures!</p>
-<p class="mt-2">Ideas, suggestions, and feedback about the app can be sent to 5am on the PalmTalk forum, while concerns
-    about the data should be directed to kinzyjr.</p>
-<p class="mt-2">Do you write code? Check out the <a href="https://github.com/cestarte/palmhardiness">github</a>. It's
-    very easy to run the app on your local machine.</p>
 
-<h1 class="is-size-4 my-4" id="datasources"> <a href="#datasources"> <i
-            class="fa-solid fa-link is-size-6 has-text-grey-lighter"></i></a> Data
-    Sources
+<p class="mt-1">There are a few ways to contribute to the project:</p>
+
+<div class="columns mt-1">
+    <div class="column is-fullwidth">
+        <div class="columns is-mobile">
+            <div class="column has-text-right">
+                <i class="fa-regular fa-image contribute-icon data"></i>
+            </div>
+
+            <div class="column is-four-fifths">
+                <p>Share your own observations on the
+                    <a href="http://palmtalk.com">PalmTalk</a> forum!
+                    Make a thread about your experience and include pictures.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="columns">
+    <div class="column is-fullwidth">
+        <div class="columns is-mobile">
+            <div class="column has-text-right">
+                <i class="fa-solid fa-lightbulb contribute-icon feedback"></i>
+            </div>
+
+            <div class="column is-four-fifths">
+                <p>Ideas, suggestions, and feedback about the app can be
+                    sent to 5am on the PalmTalk forum. Concerns
+                    about the data should be directed to kinzyjr.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="columns">
+    <div class="column is-fullwidth">
+        <div class="columns is-mobile">
+            <div class="column has-text-right">
+                <i class="fa-solid fa-code contribute-icon code"></i>
+            </div>
+
+            <div class="column is-four-fifths">
+                <p>Do you write code? Check out the <a href="https://github.com/cestarte/palmhardiness">github</a>. It's
+                    very easy to run the app on your computer.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<h1 class="is-size-4 my-4" id="datasources">
+    <a href="#datasources">
+        <i class="fa-solid fa-link is-size-6 has-text-grey-lighter"></i>
+    </a>
+    Data Sources
 </h1>
 
 <article class="message mt-2 is-info">
@@ -82,5 +128,24 @@
     The app codebase is available at github here <a
         href="https://github.com/cestarte/palmhardiness">https://github.com/cestarte/palmhardiness</a>.</p>
 
+
+<style>
+    .contribute-icon {
+        font-size: 3rem;
+    }
+
+    .contribute-icon.code {
+        color: limegreen;
+    }
+
+    .contribute-icon.feedback {
+        color: #fce664 !important;
+    }
+
+    .contribute-icon.data {
+        /* .contribute-icon .data { */
+        color: cornflowerblue;
+    }
+</style>
 
 {% endblock %}
