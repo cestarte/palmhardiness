@@ -5,6 +5,7 @@ Palm enthusiasts the world over are sharing their observations online in forums.
 > Massive thanks to [kinzyjr](https://www.palmtalk.org/forum/profile/5832-kinzyjr/ ) who collected all the data this app is built on top of. 
 > kinzyjr provides it as an annual Excel document in the [cold hardiness master data](https://www.palmtalk.org/forum/topic/61358-0000-cold-hardiness-observation-master-data/ ) thread on [PalmTalk](https://www.palmtalk.org)
 
+See [Screenshots](#screenshots)
 
 ## Prerequisites
   * [Python](https://www.python.org) 3 (Developed against 3.11.)
@@ -41,3 +42,9 @@ Icons are provided by Font Awesome 6 (free)
 Geocoding is provided by Nominatim
 
   * https://operations.osmfoundation.org/policies/nominatim/
+
+# Screenshots
+
+![Palm Index](./static/readme/palm_index.png)
+![Palm Detail](./static/readme/palm_detail.png)
+![Map](./static/readme/map.png)
