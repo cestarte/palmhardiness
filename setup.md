@@ -2,7 +2,7 @@
 
 The following commands will walk you through setting up the environment, preparing a database, and running the app.
 
-Or return to the [README](readme.md)
+Or return to the [README](README.md)
 
 ## 1. Virtual Environment
 
@@ -82,4 +82,4 @@ There is a special table named `Location` which is not dropped with the `--drop`
 
 ----
 
-Return to the [README](readme.md)
+Return to the [README](README.md)

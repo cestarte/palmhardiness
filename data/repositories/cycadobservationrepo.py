@@ -148,36 +148,3 @@ def write_to_database(database_path:str, observations:list[CycadObservation]):
     finally:
         if con:
             con.close()
-
-def read_from_row(row:sqlite3.Row) -> CycadObservation:
-    """Read a single cycad observation from a database row."""
-    o = CycadObservation()
-    o.id = row['Id']
-    o.legacy_id = row['LegacyId']
-    o.cycad_id = row['CycadId']
-    o.cycad_legacy_id = row['CycadLegacyId']
-    o.who_reported = row['WhoReported']
-    o.city = row['City']
-    o.state = row['State']
-    o.country = row['Country']
-    o.damage_id = row['DamageId']
-    o.damage_legacy_id = row['DamageLegacyId']
-    o.event_id = row['EventId']
-    o.event_legacy_id = row['EventLegacyId']
-    o.description = row['Description']
-    o.source = row['Source']
-    o.low_temp = row['LowTemp']
-    o.last_modified = row['LastModified']
-    o.who_modified = row['WhoModified']
-    o.location_id = row['LocationId']
-
-    # These are joined fields
-    o.event_name = row['EventName']
-    o.event_description = row['EventDescription']
-    o.event_who_reported = row['EventWhoReported']
-    o.damage_text = row['DamageText']
-    o.location_city = row['LocationCity']
-    o.location_state = row['LocationState']
-    o.location_country = row['LocationCountry']
-
-    return o

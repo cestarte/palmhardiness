@@ -5,23 +5,6 @@ from data.models.cycad import Cycad
 from data.queries.cycadqueries import queries
 from data.queries.zonequeries import queries as zonequeries
 
-def read_from_row(row:sqlite3.Row) -> Cycad:
-    cycad = Cycad()
-    cycad.id = row["Id"]
-    cycad.legacy_id = row["LegacyId"]
-    cycad.genus = row["Genus"]
-    cycad.species = row["Species"]
-    cycad.variety = row["Variety"]
-    cycad.common_name = row["CommonName"]
-    cycad.zone_id = row["ZoneId"]
-    cycad.last_modified = row["LastModified"]
-    cycad.who_modified = row["WhoModified"]
-    if hasattr(cycad, 'zone_name') and 'ZoneName' in row.keys():
-        cycad.zone_name = row["ZoneName"]
-    if hasattr(cycad, 'observation_count') and 'ObservationCount' in row.keys():
-        cycad.observation_count = row["ObservationCount"]
-    return cycad
-
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Cycad]:
     cycads:list[Cycad] = []
     print("Reading cycads from spreadsheet...", sheet)
@@ -51,7 +34,6 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
 
     wb.close()
     return cycads
-
 
 def write_to_database(database_path:str, cycads:list[Cycad]) -> None:
     print("Inserting cycads to database...")

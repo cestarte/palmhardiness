@@ -57,27 +57,3 @@ def write_to_database(database_path:str, events:list[Event]) -> None:
     finally:
         if con:
             con.close()
-
-def read_from_row(row:sqlite3.Row) -> Event:
-    event = Event()
-    event.id = row['Id']
-    event.legacy_id = row['LegacyId']
-    event.city = row['City']
-    event.state = row['State']
-    event.country = row['Country']
-    event.name = row['Name']
-    event.description = row['Description']
-    event.who_reported = row['WhoReported']
-    event.last_modified = row['LastModified']
-    event.who_modified = row['WhoModified']
-    event.location_id = row['LocationId']
-
-    # Joined fields
-    if 'Latitude' in row.keys():
-        event.latitude = row['Latitude']
-    if 'Longitude' in row.keys():
-        event.longitude = row['Longitude']
-    if 'Geo' in row.keys():
-        event.geo = row['Geo']
-
-    return event

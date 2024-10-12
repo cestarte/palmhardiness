@@ -8,31 +8,6 @@ from data.models.location import Location
 from data.queries.locationqueries import queries
 from geopy.geocoders import Nominatim
 
-def read_from_row(row:sqlite3.Row) -> Location:
-    #print("row", row.keys())
-    location = Location()
-    location.id = row["Id"]
-    location.last_modified = row["LastModified"]
-    location.who_modified = row["WhoModified"]
-    location.latitude = row["Latitude"]
-    location.longitude = row["Longitude"]
-    location.city = row["City"]
-    location.state = row["State"]
-    location.country = row["Country"]
-    location.when_attempted_geocode = row["WhenAttemptedGeocode"]
-
-    # Fields not in the Location table
-    #print("CycadObservations", row["CycadObservations"])
-    if row["CycadObservations"] is not None:
-        location.cycad_observations = row["CycadObservations"]
-    #print("PalmObservations", row["PalmObservations"])
-    if row["PalmObservations"] is not None:
-        location.palm_observations = row["PalmObservations"]
-    #print("Events", row["Events"])
-    if row["Events"] is not None:
-        location.events = row["Events"]
-    return location
-
 def read_locations_from_other_tables(database_path:str) -> list[Location]:
     locations:list[Location] = []
     print("Reading location fields from observation & event tables...")

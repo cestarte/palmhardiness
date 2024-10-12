@@ -58,33 +58,6 @@ def get_all():
         }
     }
 
-
-    offset = request.args.get('offset', 0, type=int)
-    num_results = request.args.get('num_results', 25, type=int)
-    search_term = request.args.get('search', None, type=str)
-    total_records = 0
-    records = 0
-
-    if search_term is None or search_term == '':
-        # no term provided, get all records
-        total_records = query_db(cycad.queries['get_count'], one=True)[0]
-        records = query_db(cycad.queries['get_all'], (num_results, offset))
-    else:
-        total_records = query_db(cycad.queries['search_count'], (f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',), one=True)[0]
-        records = query_db(cycad.queries['search_all'], (f'%{search_term}%',f'%{search_term}%',f'%{search_term}%',f'%{search_term}%', num_results, offset))
-
-    
-    # convert records to objects so that they can be serialized to json
-    objects:list[Cycad] = [cycad.read_from_row(row) for row in records]
-    objects_json_string = json.dumps(objects, cls=CycadSerializer)
-    # convert string to json object so it can be returned in the response
-    objects_json = json.loads(objects_json_string)
-
-    return {
-        'records': objects_json, 
-        'meta': {'offset': offset, 'num_results': len(objects), 'total_results': total_records}
-    }
-
 @api.route('/<int:cycad_id>', methods=['GET'])
 def get_one(cycad_id):
     record = query_db(query=cycadrepo.queries['get_one'], args=(cycad_id,), one=True)

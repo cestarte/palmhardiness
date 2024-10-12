@@ -5,6 +5,8 @@ Palm enthusiasts the world over are sharing their observations online in forums.
 > Massive thanks to [kinzyjr](https://www.palmtalk.org/forum/profile/5832-kinzyjr/ ) who collected all the data this app is built on top of. 
 > kinzyjr provides it as an annual Excel document in the [cold hardiness master data](https://www.palmtalk.org/forum/topic/61358-0000-cold-hardiness-observation-master-data/ ) thread on [PalmTalk](https://www.palmtalk.org)
 
+For now, the app is hosted at https://palmcoldhardiness.azurewebsites.net/
+
 See [Screenshots](#screenshots)
 
 ## Prerequisites
