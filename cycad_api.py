@@ -23,7 +23,7 @@ def get_all():
         results_per_page = 15
     if results_per_page > 100:
         results_per_page = 100
-    if search_term is not None and len(search_term) < 3:
+    if search_term is not None and len(search_term) < 2:
         search_term = None
 
     total_pages = 0

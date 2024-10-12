@@ -1,5 +1,5 @@
 
-
+let palmIndexTable = null
 window.onload = async function () {
     // table init options
     const options = {
@@ -52,21 +52,21 @@ window.onload = async function () {
             }
         ]
     }
-    let vanilla = new VanillaTable(options)
+    palmIndexTable = new VanillaTable(options)
 
     // wire up custom events
     const $search = document.getElementById('search-input')
     $search.value = ''
     const $filtered = document.getElementById('filter-unobserved')
     $filtered.checked = true
-    $search.addEventListener('input', vanilla.debounce(onLoadIndexTable))
-    $filtered.addEventListener('change', (e) => onLoadIndexTable(vanilla))
+    $search.addEventListener('input', palmIndexTable.debounce(onLoadIndexTable))
+    $filtered.addEventListener('change', (e) => onLoadIndexTable())
 
     // initial table population
-    onLoadIndexTable(vanilla)
+    onLoadIndexTable()
 }
 
-async function onLoadIndexTable(vanillaTable) {
+async function onLoadIndexTable() {
     let meta = {}
 
     if (document.getElementById('filter-unobserved').checked)
@@ -80,7 +80,7 @@ async function onLoadIndexTable(vanillaTable) {
     }
 
     let observations = await getObservations(meta)
-    vanillaTable.refreshTable(observations)
+    palmIndexTable.refreshTable(observations)
 }
 
 async function getObservations(meta) {
