@@ -96,26 +96,7 @@
 
 <p class="mt-2">In the table, like-sources have been grouped together and then tallied.</p>
 
-<div class="table-container mt-4">
-    <table class="table is-striped is-fullwidth">
-        <thead>
-            <tr class="is-primary">
-                <th>Source</th>
-                <th>Count</th>
-                <th>Type</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for ds in data.results %}
-            <tr>
-                <td>{{ ds.source }}</td>
-                <td>{{ ds.count }}</td>
-                <td>{{ ds.type }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    </table>
+<div id="datasource-table-placeholder">
 </div>
 
 <h1 class="is-size-4 mt-4" id="download"> <a href="#download"> <i
@@ -147,5 +128,8 @@
         color: cornflowerblue;
     }
 </style>
+
+<script src="{{ url_for('static', filename='js/vanilla_table.js') }}"></script>
+<script src="{{ url_for('static', filename='js/about_datasource_table.js') }}"></script>
 
 {% endblock %}

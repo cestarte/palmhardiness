@@ -1,4 +1,4 @@
-from flask import Blueprint, g, current_app, request
+from flask import Blueprint, request
 import sqlite3
 from typing import Optional
 from util.api import is_arg_true, format_record, format_records, query_db

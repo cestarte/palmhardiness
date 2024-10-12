@@ -7,38 +7,21 @@ window.onload = async function () {
         'has_pagination': true,
         'on_go_to_page': onGoToPage,
         'columns': [
-            // {
-            //     'name': 'id',
-            //     'label': ' ',
-            //     'selectable': false,
-            //     'custom_body': function (record) {
-            //         return `<a href="/location/${record['id']}" aria-label="Go to location" title="Go to location">
-            //                     <i class="fa-solid fa-magnifying-glass"></i>
-            //                 </a>`
-            //     }
-            // },
             {
-                'name': 'country',
-                'label': 'Country'
-            },
-            {
-                'name': 'state',
-                'label': 'State'
-            },
-            {
-                'name': 'city',
-                'label': 'City'
+                'name': 'locationname',
+                'label': 'Location',
+                'min_width': '45%'
             },
             {
                 'name': 'events',
                 'label': 'Events'
             },
             {
-                'name': 'palm_observations',
+                'name': 'palmobservations',
                 'label': 'Palm Observations'
             },
             {
-                'name': 'cycad_observations',
+                'name': 'cycadobservations',
                 'label': 'Cycad Observations'
             },
         ]

@@ -64,7 +64,7 @@ This launches a development Flask server, probably running at http://localhost:5
 > Safari users: You might need to replace `localhost` with `127.0.0.1`. Ex: http://127.0.0.1:5000
 
 
-`python application.py`
+`python app.py`
 
 ![Launch the app](./static/readme/launch.png)
 

@@ -1,9 +1,8 @@
-from flask import Blueprint, g, current_app, request
-import sqlite3
-from data.models.location import Location, LocationSerializer
+from flask import Blueprint, request
 from data.repositories import locationrepo as locationrepo
 import json
 import math
+from util.api import query_db, format_record, format_records
 
 api = Blueprint('location_api', __name__)
 
@@ -39,17 +38,12 @@ def get_all():
         has_previous_page = True
     if total_pages > page:
         has_next_page = True
-    
-    # convert records to objects so that they can be serialized to json
-    objects:list[Location] = [locationrepo.read_from_row(row) for row in records]
-    objects_json_string = json.dumps(objects, cls=LocationSerializer)
-    objects_json = json.loads(objects_json_string)
 
     return {
-        'records': objects_json, 
+        'records': format_records(records), 
         'meta': {
             'offset': record_offset, 
-            'results_on_this_page': len(objects), 
+            'results_on_this_page': len(records), 
             'total_results': total_records,
             'total_pages': total_pages,
             'has_previous_page': has_previous_page,
@@ -64,8 +58,7 @@ def get_all():
 def get_one(location_id):
     record = query_db(query=locationrepo.queries['get_one'], args=(location_id,), one=True)
     if record is not None:
-        obj = locationrepo.read_from_row(record)
-        return json.dumps(obj, cls=LocationSerializer)
+        return format_record(record)
     return json.dumps(None)
 
 @api.route('/<int:location_id>/stat/<stat_name>', methods=['GET'])
@@ -74,16 +67,3 @@ def get_stat(location_id, stat_name):
     if record is not None and record['value'] is not None:
         return json.loads(f'{{"value": "{str(record["value"])}"}}')
     return json.loads(None)
-
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(current_app.config['Database'])
-        db.row_factory = sqlite3.Row
-    return db
-
-def query_db(query, args=(), one=False):
-    cur = get_db().execute(query, args)
-    rv = cur.fetchall()
-    cur.close()
-    return (rv[0] if rv else None) if one else rv

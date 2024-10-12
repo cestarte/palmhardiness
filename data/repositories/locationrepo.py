@@ -29,6 +29,7 @@ DROP TABLE IF EXISTS "Location"
         WITH vars AS (SELECT UPPER(?) AS term)
         SELECT 
             Location.*
+	        ,TRIM(COALESCE(Location.City, '') || ', ' || COALESCE(Location.State, '') || ', ' || COALESCE(Location.Country, ''), ', ') AS LocationName
             ,(SELECT COUNT(PalmObservation.Id) FROM PalmObservation WHERE PalmObservation.LocationId = Location.Id) AS PalmObservations
             ,(SELECT COUNT(CycadObservation.Id) FROM CycadObservation WHERE CycadObservation.LocationId = Location.Id) AS CycadObservations
             ,(SELECT COUNT(Event.Id) FROM Event WHERE Event.LocationId = Location.Id) AS Events
@@ -67,13 +68,13 @@ def read_from_row(row:sqlite3.Row) -> Location:
     location.when_attempted_geocode = row["WhenAttemptedGeocode"]
 
     # Fields not in the Location table
-    print("CycadObservations", row["CycadObservations"])
+    #print("CycadObservations", row["CycadObservations"])
     if row["CycadObservations"] is not None:
         location.cycad_observations = row["CycadObservations"]
-    print("PalmObservations", row["PalmObservations"])
+    #print("PalmObservations", row["PalmObservations"])
     if row["PalmObservations"] is not None:
         location.palm_observations = row["PalmObservations"]
-    print("Events", row["Events"])
+    #print("Events", row["Events"])
     if row["Events"] is not None:
         location.events = row["Events"]
     return location

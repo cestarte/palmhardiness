@@ -1,6 +1,8 @@
 #map {
     min-height: 180px;
     height: 80vh;
+    /* set this below menu hovers and popups */
+    z-index: 19;
 }
 
 .event-marker {

@@ -1,5 +1,3 @@
-import sqlite3
-from data.models.datasource import DataSource
 
 queries = {
     "get_all": """
@@ -55,12 +53,3 @@ ORDER BY [Type], [Count] DESC
 """,
 
 }
-
-
-
-def read_from_row(row:sqlite3.Row) -> DataSource:
-    item = DataSource()
-    item.source = row["Source"]
-    item.count = row["Count"]
-    item.type = row["Type"]
-    return item

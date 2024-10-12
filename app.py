@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from flask import Flask, redirect, jsonify, make_response, render_template, g, url_for
 from flask_cors import CORS
-from werkzeug.exceptions import HTTPException
+#from werkzeug.exceptions import HTTPException
 from exceptions import InvalidApiUsage
 from palm_api import api as palm_api
 from cycad_api import api as cycad_api
@@ -12,9 +12,8 @@ import palm_web
 import cycad_web
 import location_web
 from datasource_api import api as datasource_api
-from datasource_web import web as datasource_web
 import requests
-import sqlite3
+
 app = Flask(__name__)
 # https://flask-cors.readthedocs.io/en/latest/
 CORS(app, resources= { r"/api/*": {"origins": "*"}})
@@ -24,7 +23,6 @@ app.config['Database'] = './palmhardiness.db'
 app.register_blueprint(palm_web.web, url_prefix='/palm', name='palm_web')
 app.register_blueprint(cycad_web.web, url_prefix='/cycad', name='cycad_web')
 app.register_blueprint(location_web.web, url_prefix='/location', name='location_web')
-app.register_blueprint(datasource_web, url_prefix='/datasource')
 
 app.register_blueprint(palm_api , url_prefix='/api/palm', name='palm_api')
 app.register_blueprint(cycad_api , url_prefix='/api/cycad', name='cycad_api')
@@ -35,14 +33,7 @@ app.register_blueprint(datasource_api , url_prefix='/api/datasource')
 
 @app.route('/about', methods=['GET'])
 def about():
-    api_response = requests.get('http://127.0.0.1:5000/api/datasource')
-    api_json = api_response.json()
-
-    data = {
-        'total_results': api_json['meta']['total_results'],
-        'results': api_json['records'],
-    }
-    return render_template('about.html', data=data)
+    return render_template('about.html')
 
 @app.route('/map', methods=['GET'])
 def map():
@@ -64,4 +55,4 @@ def close_connection(exception):
 
 if __name__ == "__main__":
     #app.run(ssl_context='adhoc', debug=True)
-    app.run(debug=True)
+    app.run(debug=False)

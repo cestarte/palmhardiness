@@ -3,7 +3,7 @@ let vanilla = null
 window.onload = async function () {
     // table init options
     const options = {
-        'table_placeholder': 'lowest-surviving-table-placeholder',
+        'table_placeholder': 'lowest-survived-table-placeholder',
         'has_pagination': true,
         'on_go_to_page': onGoToPage,
         'columns': [
@@ -35,14 +35,14 @@ window.onload = async function () {
             },
             {
                 'name': 'records',
-                'label': '# Observations'
+                'label': 'Observations'
             }
         ]
     }
     vanilla = new VanillaTable(options)
 
     // wire up custom events
-    const $search = document.getElementById('lowest-surviving-search-input')
+    const $search = document.getElementById('lowest-survived-search-input')
     $search.value = ''
     $search.addEventListener('input', vanilla.debounce(onLoadLowestSurvivingTable))
 
@@ -53,7 +53,7 @@ window.onload = async function () {
 async function onLoadLowestSurvivingTable() {
     let meta = {}
 
-    const $search = document.getElementById('lowest-surviving-search-input')
+    const $search = document.getElementById('lowest-survived-search-input')
     if ($search.value) {
         meta.search = $search.value
     }

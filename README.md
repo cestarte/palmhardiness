@@ -25,7 +25,7 @@ Windows: `venv\Scripts\Activate.ps1`
 
 `python ./populate_database.py --excel ./202406092045_ColdHardinessMasterData.xlsx`
 
-`python main.py`
+`python app.py`
 
 Open your browser to the web address from the terminal, probably http://localhost:5000
 

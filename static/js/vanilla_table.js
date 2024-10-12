@@ -347,6 +347,14 @@ class VanillaTable {
                     //   * both custom body & formatters are defined
                     $td.innerHTML = record[column.name]
                 }
+
+                if (column.width) {
+                    $td.style.width = column.width
+                }
+                if (column.min_width) {
+                    $td.style.minWidth = column.min_width
+                }
+
                 $tr.appendChild($td)
             })
             $tbody.appendChild($tr)
