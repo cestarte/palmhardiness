@@ -30,6 +30,7 @@
 
 <div class="table-container">
     <div id="observation-table">
+        test
     </div>
 </div>
 
@@ -37,27 +38,10 @@
 
 <script src="{{ url_for('static', filename='js/vanilla_table.js') }}"></script>
 <script src="{{ url_for('static', filename='js/statcard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/palm_observation_table.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/statcard.css') }}">
 
 <script>
-    async function getObservationsAsync() {
-        try {
-            const response = await fetch('/api/palm/{{data.id}}/observations')
-            if (!response.ok) {
-                throw new Error('Network response was not OK.', response)
-            }
-
-            const contentType = response.headers.get("content-type")
-            if (!contentType || !contentType.includes("application/json"))
-                throw new TypeError('Expected JSON response but got something else.')
-
-            return response.json()
-        } catch (error) {
-            console.error('Failed to fetch the observation data.', error)
-            return []
-        }
-    }
-
     const CardType = {
         LOWESTSURVIVED: 'LOWESTSURVIVED',
         NUMEVENTS: 'NUMEVENTS',
@@ -66,8 +50,36 @@
         MOSTREPORTEDBY: 'MOSTREPORTEDBY'
     };
 
+    const zone = `{{data.zonename}}`
+    const zone_label = `
+<div class="dropdown is-hoverable">
+    <div class="dropdown-trigger">
+        <p class="pl-2">USDA Zone <i class="fa-solid fa-circle-info is-size-7" aria-haspopup="true"
+                aria-controls="zone-help"></i></p>
+    </div>
+    <div class="dropdown-menu" id="zone-help" role="menu">
+        <div class="dropdown-content">
+            <div class="dropdown-item is-size-7 has-text-weight-normal">
+                <p>USDA Hardiness Zones are based on the average annual minimum
+                    temperature.</p>
+                <a target="_blank" href="https://planthardiness.ars.usda.gov/"> <i
+                        class="fa-solid fa-arrow-up-right-from-square"></i> More info at
+                    usda.gov</a>
+            </div>
+        </div>
+    </div>
+</div>
+`
+
     async function loadCard(type) {
-        let url = `/api/palm/{{data.id}}/stat/${type}`
+        const url = `/api/palm/{{data.id}}/stat/${type}`
+
+        // Always attempt to read from localstorage to save bandwidth.
+        let localStorageData = getFromLocalStorage(url)
+        if (localStorageData)
+            return localStorageData
+
+        // Fetch from the server. The item(s) are not in localstorage.
         try {
             const response = await fetch(url)
             if (!response.ok) {
@@ -77,7 +89,10 @@
             const contentType = response.headers.get("content-type")
             if (!contentType || !contentType.includes("application/json"))
                 throw new TypeError(`Expected JSON response but got something else: \'${contentType}\'`)
-            return response.json()
+
+            const json = await response.json()
+            saveToLocalStorage(url, json)
+            return json
         } catch (error) {
             console.error('Failed to fetch the card data.', error)
             return ''
@@ -85,93 +100,14 @@
     }
 
     window.onload = async function () {
-        const zone = `{{data.zonename}}`
-        const zone_label = `
-    <div class="dropdown is-hoverable">
-        <div class="dropdown-trigger">
-            <p class="pl-2">USDA Zone <i class="fa-solid fa-circle-info is-size-7" aria-haspopup="true"
-                    aria-controls="zone-help"></i></p>
-        </div>
-        <div class="dropdown-menu" id="zone-help" role="menu">
-            <div class="dropdown-content">
-                <div class="dropdown-item is-size-7 has-text-weight-normal">
-                    <p>USDA Hardiness Zones are based on the average annual minimum
-                        temperature.</p>
-                    <a target="_blank" href="https://planthardiness.ars.usda.gov/"> <i
-                            class="fa-solid fa-arrow-up-right-from-square"></i> More info at
-                        usda.gov</a>
-                </div>
-            </div>
-        </div>
-    </div>
-    `
-
         const cards = [
             new StatCard(document.getElementById('zone'), zone_label, zone),
             new StatCard(document.getElementById('lowest-survived-temp'), 'Lowest survived', '', () => { return loadCard('LOWESTSURVIVED') }),
             new StatCard(document.getElementById('num-events'), 'Events', '', () => { return loadCard('NUMEVENTS') }),
             new StatCard(document.getElementById('num-observations'), 'Observations', '', () => { return loadCard('NUMOBSERVATIONS') }),
-            // new StatCard(document.getElementById('most-common-location'), 'Most common location', '', () => { return loadCard('MOSTCOMMONLOCATION') }),
-            // new StatCard(document.getElementById('most-reported-by'), 'Most reported by', '', () => { return loadCard('MOSTREPORTEDBY') })
         ]
 
-        let options = {
-            'table_placeholder': 'observation-table',
-            'columns': [
-                {
-                    'name': 'locationname',
-                    'label': 'Location'
-                },
-                {
-                    'name': 'lowtemp',
-                    'label': 'Low Temp',
-                    'custom_body': (record, columnName, $cell) => {
-                        const id = VanillaTable.generateId()
-                        let $elem = document.createElement('div')
-                        $elem.innerHTML = `<p>
-                            ${record[columnName]}&nbsp°F</p> <p>
-                                ${((record[columnName] - 32) * 5 / 9).toFixed(2)}&nbsp°C
-                            </p>`
-                        return $elem
-                    }
-                },
-                {
-                    'name': 'damagetext',
-                    'label': 'Damage'
-                },
-                {
-                    'name': 'description',
-                    'label': 'Description',
-                    'formatters': ['max_len', 'text'],
-                    'on_click': (record, columnName, $cell) => {
-                        if (record[columnName] && record[columnName].length > 100)
-                            createModal(null, '', record[columnName], '')
-                    }
-                },
-                {
-                    'name': 'whoreported',
-                    'label': 'Reporter'
-                },
-                {
-                    'name': 'eventname',
-                    'label': 'Event',
-                    //'formatters': ['max_len', 'text'],
-                    'on_click': (record, columnName, $cell) => {
-                        if (record['eventdescription'])
-                            createModal(null, record['eventname'], record['eventdescription'], '')
-                    }
-                },
-                {
-                    'name': 'source',
-                    'label': 'Source',
-                    'formatters': ['link'],
-
-                }
-            ]
-        }
-        let vanilla = new VanillaTable(options)
-        let observations = await getObservationsAsync()
-        vanilla.populateTableBody(observations)
+        createObservationTable()
     }
 </script>
 

@@ -1,4 +1,4 @@
-let vanilla = null
+
 
 window.onload = async function () {
     // table init options
@@ -52,7 +52,7 @@ window.onload = async function () {
             }
         ]
     }
-    vanilla = new VanillaTable(options)
+    let vanilla = new VanillaTable(options)
 
     // wire up custom events
     const $search = document.getElementById('search-input')
@@ -60,13 +60,13 @@ window.onload = async function () {
     const $filtered = document.getElementById('filter-unobserved')
     $filtered.checked = true
     $search.addEventListener('input', vanilla.debounce(onLoadIndexTable))
-    $filtered.addEventListener('change', (e) => onLoadIndexTable())
+    $filtered.addEventListener('change', (e) => onLoadIndexTable(vanilla))
 
     // initial table population
-    onLoadIndexTable()
+    onLoadIndexTable(vanilla)
 }
 
-async function onLoadIndexTable() {
+async function onLoadIndexTable(vanillaTable) {
     let meta = {}
 
     if (document.getElementById('filter-unobserved').checked)
@@ -80,7 +80,7 @@ async function onLoadIndexTable() {
     }
 
     let observations = await getObservations(meta)
-    vanilla.refreshTable(observations)
+    vanillaTable.refreshTable(observations)
 }
 
 async function getObservations(meta) {
@@ -106,6 +106,12 @@ async function getObservations(meta) {
         }
     }
 
+    // Always attempt to read from localstorage to save bandwidth.
+    let localStorageData = getFromLocalStorage(url)
+    if (localStorageData)
+        return localStorageData
+
+    // Fetch from the server. The item(s) are not in localstorage.
     try {
         const response = await fetch(url)
         if (!response.ok) {
@@ -115,7 +121,10 @@ async function getObservations(meta) {
         const contentType = response.headers.get("content-type")
         if (!contentType || !contentType.includes("application/json"))
             throw new TypeError('Expected JSON response but got something else.')
-        return await response.json()
+
+        json = await response.json()
+        saveToLocalStorage(url, json)
+        return json
     } catch (error) {
         console.error('Failed to fetch the observation data.', error)
         return {

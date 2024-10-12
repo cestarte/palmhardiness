@@ -34,12 +34,9 @@ const cycadIcon = L.divIcon({
     html: '<span>C</span>'
 });
 
-
-
-
 function setMapViewToUserLocation() {
     function onGotUserCoords(position) {
-        console.log('got user coord', position.coords)
+        //console.log('got user coord', position.coords)
         map.setView([position.coords.latitude, position.coords.longitude], 9);
     }
 
@@ -61,9 +58,17 @@ function setMapViewToUserLocation() {
 }
 
 async function getEventLocations() {
-    let response = await fetch('/api/event')
+    const url = '/api/event'
+
+    // Always attempt to read from localstorage to save bandwidth.
+    let localStorageData = getFromLocalStorage(url)
+    if (localStorageData)
+        return localStorageData
+
+    // Fetch from the server. The item(s) are not in localstorage.
+    let response = await fetch(url)
     let data = await response.json()
-    //console.log('got event locations', data)
+    saveToLocalStorage(url, data)
     return data
 }
 
@@ -101,9 +106,16 @@ async function getObservations(plantType) {
     plantType = plantType.toLowerCase()
     const url = `/api/observation/${plantType}`
 
+    // Always attempt to read from localstorage to save bandwidth.
+    let localStorageData = getFromLocalStorage(url)
+    if (localStorageData)
+        return localStorageData
+
+    // Fetch from the server. The item(s) are not in localstorage.
     try {
         let response = await fetch(url)
         data = await response.json()
+        saveToLocalStorage(url, data)
         //console.log(`got ${plantType} observations`, data)
     } catch (error) {
         console.error('Failed to fetch the observation data.', error)

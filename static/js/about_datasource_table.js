@@ -30,6 +30,12 @@ async function onLoadDataSourceTable(vanillaTable) {
 async function getDataSources() {
     let url = '/api/datasource/'
 
+    // Always attempt to read from localstorage to save bandwidth.
+    let localStorageData = getFromLocalStorage(url)
+    if (localStorageData)
+        return localStorageData
+
+    // Fetch from the server. The item(s) are not in localstorage.
     try {
         const response = await fetch(url)
         if (!response.ok) {
@@ -39,7 +45,10 @@ async function getDataSources() {
         const contentType = response.headers.get("content-type")
         if (!contentType || !contentType.includes("application/json"))
             throw new TypeError('Expected JSON response but got something else.')
-        return await response.json()
+
+        json = await response.json()
+        saveToLocalStorage(url, json)
+        return json
     } catch (error) {
         console.error('Failed to fetch the data source data.', error)
         return {
