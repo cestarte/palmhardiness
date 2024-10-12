@@ -2,39 +2,8 @@ import openpyxl
 import sqlite3
 from util.string import clean, normalize_country, normalize_state, normalize_city, remove_underscore
 from data.models.event import Event
+from data.queries.eventqueries import queries
 from typing import Optional
-
-queries = {
-    "drop": """
-DROP TABLE IF EXISTS "Event"
-    """,
-    "create": """
-CREATE TABLE IF NOT EXISTS "Event" (
-    "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-    "LegacyId" integer,
-    "LastModified" timestamp NOT NULL,
-    "WhoModified" varchar(128) NOT NULL,
-    "WhoReported" varchar(265) NOT NULL,
-    "City" varchar(512) NOT NULL,
-    "State" varchar(512) NOT NULL,
-    "Country" varchar(512) NOT NULL,
-    "Name" varchar NOT NULL,
-    "Description" varchar NOT NULL,
-    "LocationId" integer,
-    FOREIGN KEY (LocationId) REFERENCES "Location" (Id)
-);
-    """,
-
-    "get_all_count": """
-    SELECT COUNT(*) FROM [Event]
-    """,
-
-    "get_all": """
-    SELECT * 
-    FROM [Event], [Location] 
-    WHERE [Event].LocationId = [Location].Id
-    """,
-}
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Event]:
     events:list[Event] = []
@@ -56,7 +25,6 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
 
     wb.close()
     return events
-
 
 def write_to_database(database_path:str, events:list[Event]) -> None:
     print("Inserting events to database...")
@@ -80,7 +48,7 @@ def write_to_database(database_path:str, events:list[Event]) -> None:
                 event.who_modified,
             )
             cur.execute(
-                "INSERT INTO Event (Id, LegacyId, WhoReported, City, State, Country, Name, Description, LastModified, WhoModified) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                queries['insert'],
                 data,
             )
         con.commit()

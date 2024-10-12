@@ -2,23 +2,7 @@ import openpyxl
 import sqlite3
 from util.string import clean
 from data.models.synonym import Synonym
-
-queries = {
-    "drop": """
-DROP TABLE IF EXISTS "Synonym"
-    """,
-    "create": """
-CREATE TABLE IF NOT EXISTS "Synonym" (
-    "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-    "PalmLegacyId" integer,
-    "LastModified" timestamp NOT NULL,
-    "WhoModified" varchar(128) NOT NULL,
-    "Genus" varchar(256),
-    "Species" varchar(128),
-    "Variety" varchar(128)
-);
-    """
-}
+from data.queries.synonymqueries import queries
 
 def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[Synonym]:
     items:list[Synonym] = []
@@ -64,7 +48,7 @@ def write_to_database(database_path:str, synonyms:list[Synonym]) -> None:
                 item.who_modified,
             )
             cur.execute(
-                "INSERT INTO Synonym (Id, PalmLegacyId, Genus, Species, Variety, LastModified, WhoModified) VALUES(?, ?, ?, ?, ?, ?, ?)",
+                queries['insert'],
                 data,
             )
         con.commit()

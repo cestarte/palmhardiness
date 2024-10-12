@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from data.repositories import locationrepo as locationrepo
+from data.queries.locationqueries import queries
 import json
 import math
 from util.api import query_db, format_record, format_records
@@ -26,8 +26,8 @@ def get_all():
     total_records = 0
     records = 0
     record_offset = (page-1) * results_per_page
-    total_records = query_db(locationrepo.queries['get_count'], (search_term,), one=True)[0]
-    records = query_db(locationrepo.queries['get_records'], (search_term, results_per_page, record_offset))
+    total_records = query_db(queries['get_count'], (search_term,), one=True)[0]
+    records = query_db(queries['get_records'], (search_term, results_per_page, record_offset))
 
     total_pages = math.ceil(total_records / results_per_page)
     has_previous_page = False
@@ -56,14 +56,14 @@ def get_all():
 
 @api.route('/<int:location_id>', methods=['GET'])
 def get_one(location_id):
-    record = query_db(query=locationrepo.queries['get_one'], args=(location_id,), one=True)
+    record = query_db(queries['get_one'], args=(location_id,), one=True)
     if record is not None:
         return format_record(record)
     return json.dumps(None)
 
 @api.route('/<int:location_id>/stat/<stat_name>', methods=['GET'])
 def get_stat(location_id, stat_name):
-    record = query_db(locationrepo.queries[f'get_stat_{stat_name}'], (location_id,), one=True)
+    record = query_db(queries[f'get_stat_{stat_name}'], (location_id,), one=True)
     if record is not None and record['value'] is not None:
         return json.loads(f'{{"value": "{str(record["value"])}"}}')
     return json.loads(None)

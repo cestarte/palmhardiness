@@ -2,8 +2,8 @@ from flask import Blueprint, request
 import sqlite3
 from typing import Optional
 from util.api import is_arg_true, format_record, format_records, query_db
-from data.repositories import palmrepo as palmrepo
-from data.repositories import palmobservationrepo as palmobservationrepo
+from data.queries.palmqueries import queries as palmqueries
+from data.queries.palmobservationqueries import queries as palmobsqueries
 import json
 import math
 
@@ -30,8 +30,8 @@ def get_all():
     total_records = 0
     records = 0
     record_offset = (page-1) * results_per_page
-    total_records = query_db(palmrepo.queries['get_count'], (filter_unobserved, search_term), one=True)[0]
-    records = query_db(palmrepo.queries['get_records'], (filter_unobserved, search_term, results_per_page, record_offset))
+    total_records = query_db(palmqueries['get_count'], (filter_unobserved, search_term), one=True)[0]
+    records = query_db(palmqueries['get_records'], (filter_unobserved, search_term, results_per_page, record_offset))
 
     total_pages = math.ceil(total_records / results_per_page)
     has_previous_page = False
@@ -60,12 +60,12 @@ def get_all():
 
 @api.route('/<int:palm_id>', methods=['GET'])
 def get_one(palm_id):
-    record = query_db(query=palmrepo.queries['get_one'], args=(palm_id,), one=True)
+    record = query_db(palmqueries['get_one'], args=(palm_id,), one=True)
     return format_record(record)
 
 @api.route('/<int:palm_id>/observations', methods=['GET'])
 def get_observations(palm_id):
-    records = query_db(query=palmobservationrepo.queries['get_all_for_palm'], args=(palm_id,))
+    records = query_db(palmobsqueries['get_all_for_palm'], args=(palm_id,))
     return format_records(records)
 
 @api.route('/lowestsurviving', methods=['GET'])
@@ -88,8 +88,8 @@ def get_lowest_surviving():
     total_records = 0
     records = 0
     record_offset = (page-1) * results_per_page
-    total_records = query_db(palmrepo.queries['get_count_lowest_surviving_for_all_palms'], args=(search_term,), one=True)[0]
-    records = query_db(palmrepo.queries['get_lowest_surviving_for_all_palms'], (search_term, results_per_page, record_offset))
+    total_records = query_db(palmqueries['get_count_lowest_surviving_for_all_palms'], args=(search_term,), one=True)[0]
+    records = query_db(palmqueries['get_lowest_surviving_for_all_palms'], (search_term, results_per_page, record_offset))
 
     total_pages = math.ceil(total_records / results_per_page)
     has_previous_page = False
@@ -120,7 +120,7 @@ def get_lowest_surviving():
 def get_stat(palm_id, stat_name):
     record:Optional[sqlite3.row]
     try:
-        record = query_db(palmrepo.queries[f'get_stat_{stat_name}'], (palm_id,), one=True)
+        record = query_db(palmqueries[f'get_stat_{stat_name}'], (palm_id,), one=True)
     except KeyError:
         record = None
     except TypeError:
