@@ -65,8 +65,12 @@ div .popup-record-detail {
     color: darkslategray !important;
 }
 
-.popup-record-detail strong {
+.popup-record-detail {
     margin-top: 0.5rem;
     font-size: 0.6rem !important;
-    color: gray !important;
+}
+
+.popup-record span.is-label {
+    font-weight: var(--bulma-weight-semibold);
+    color: darkslategray !important;
 }

@@ -6,8 +6,9 @@ api = Blueprint('event_api', __name__)
 
 @api.route('/', methods=['GET'])
 def get_all():
-    total_records = query_db(queries['get_all_count'], one=True)[0]
     records = query_db(queries['get_all'])
+    #total_records = query_db(queries['get_all_count'], one=True)[0]
+    total_records = len(records)
 
     return {
         'records': format_records(records), 

@@ -15,20 +15,37 @@
 <script src="{{ url_for('static', filename='js/leaflet/leaflet.js') }}"></script>
 <script src="{{ url_for('static', filename='js/map.js') }}"></script>
 <script>
-    window.onload = async () => {
+    window.onload = async function () {
         setMapViewToUserLocation()
+        let events = {}
+        let palmObservations = {}
+        let cycadObservations = {}
 
-        let events = await getEventLocations()
-        if (events.meta.total_results > 0)
-            addEventMarkers(events.records)
+        try {
+            console.log('map calling geteventlocations')
+            events = await getEventLocations()
+            console.log('map got events', events)
+            if (events.meta.total_results > 0)
+                addEventMarkers(events.records)
+        } catch (error) {
+            console.error('Failed to update the map with event locations.', error)
+        }
 
-        let palmObservations = await getObservations('palm')
-        if (palmObservations.meta.total_results > 0)
-            addObservationMarkers(palmObservations.records, 'palm')
+        try {
+            palmObservations = await getObservations('palm')
+            if (palmObservations.meta.total_results > 0)
+                addObservationMarkers(palmObservations.records, 'palm')
+        } catch (error) {
+            console.error('Failed to update the map with palm observations.', error)
+        }
 
-        let cycadObservations = await getObservations('cycad')
-        if (cycadObservations.meta.total_results > 0)
-            addObservationMarkers(cycadObservations.records, 'cycad')
+        try {
+            cycadObservations = await getObservations('cycad')
+            if (cycadObservations.meta.total_results > 0)
+                addObservationMarkers(cycadObservations.records, 'cycad')
+        } catch (error) {
+            console.error('Failed to update the map with cycad observations.', error)
+        }
     }
 </script>
 

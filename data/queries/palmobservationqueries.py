@@ -68,19 +68,20 @@ SELECT
     ,PalmObservation.WhoModified
     ,PalmObservation.WhoReported
     ,PalmObservation.Source
-    ,Palm.Genus AS Genus
-    ,Palm.Species AS Species
+    ,Palm.Id AS PalmId
+    --,Palm.Genus AS Genus
+    --,Palm.Species AS Species
     ,Palm.CommonName AS CommonName
-    ,Palm.Variety AS Variety
-    ,TRIM(COALESCE(Palm.Genus, '') || ' ' || COALESCE(Palm.Species, '') || ' ' || COALESCE(Palm.Variety, '')) AS PalmName
+    --,Palm.Variety AS Variety
+    ,TRIM(COALESCE(Palm.Genus, '') || ' ' || COALESCE(Palm.Species, '') || ' ' || COALESCE(Palm.Variety, '')) AS Name
     ,Event.Name AS EventName
-    ,Location.Id AS LocationId
-    ,Location.City AS City
-    ,Location.State AS State
-    ,Location.Country AS Country
+    --,Location.Id AS LocationId
+    --,Location.City AS City
+    --,Location.State AS State
+    --,Location.Country AS Country
     ,Location.Latitude AS Latitude
     ,Location.Longitude AS Longitude
-    ,Location.Geo AS Geo
+    --,Location.Geo AS Geo
 	,TRIM(COALESCE(Location.City, '') || ', ' || COALESCE(Location.State, '') || ', ' || COALESCE(Location.Country, ''), ', ') AS LocationName
     ,'PalmObservation' AS [Type]
 FROM PalmObservation

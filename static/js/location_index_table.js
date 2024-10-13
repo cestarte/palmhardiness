@@ -10,7 +10,7 @@ window.onload = async function () {
             {
                 'name': 'locationname',
                 'label': 'Location',
-                'min_width': '45%'
+                'width': '45%'
             },
             {
                 'name': 'events',

@@ -36,7 +36,20 @@ LIMIT 1
     """,
 
     "get_all": """
-    SELECT * 
+    SELECT Event.Id
+        ,Event.LastModified
+        ,Event.WhoModified
+        ,Event.WhoReported
+        ,Event.Name
+        ,Event.Description
+        --,Location.Id AS LocationId
+        --,Location.City AS City
+        --,Location.State AS State
+        --,Location.Country AS Country
+        ,Location.Latitude AS Latitude
+        ,Location.Longitude AS Longitude
+        --,Location.Geo AS Geo
+        ,TRIM(COALESCE(Location.City, '') || ', ' || COALESCE(Location.State, '') || ', ' || COALESCE(Location.Country, ''), ', ') AS LocationName
     FROM [Event], [Location] 
     WHERE [Event].LocationId = [Location].Id
     """,
