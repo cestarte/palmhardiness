@@ -68,11 +68,13 @@ def get_observations(palm_id):
     records = query_db(palmobsqueries['get_all_for_palm'], args=(palm_id,))
     return format_records(records)
 
-@api.route('/lowestsurviving', methods=['GET'])
-def get_lowest_surviving():
+@api.route('/lowestsurvived', methods=['GET'])
+def get_lowest_survived():
     page = request.args.get('page', 1, type=int)
     results_per_page = request.args.get('results_per_page', 15, type=int)
     search_term = request.args.get('search', None, type=str)
+    sort_by_ui = request.args.get('sort_by', 'name', type=str)
+    sort_order = request.args.get('sort_order', 'asc', type=str)
 
     # sanity check the inputs
     if page < 1:
@@ -84,12 +86,35 @@ def get_lowest_surviving():
     if search_term is not None and len(search_term) < 2:
         search_term = None
 
+    # translate the UI sort_by column to the actual SQL column name
+    sort_by = sort_by_ui.upper()
+    if sort_by == 'NAME':
+        sort_by = '[Name]'
+    elif sort_by == 'MIN':
+        sort_by = '[Min]'
+    elif sort_by == 'MAX':
+        sort_by = '[Max]'
+    elif sort_by == 'AVERAGE':
+        sort_by = '[Average]'
+    elif sort_by == 'RECORDS':
+        sort_by = '[Records]'
+    else:
+        sort_by = '[Name]'
+
+    # translate the UI sort_order to the actual SQL sort order
+    if not sort_order or sort_order.upper() == 'DESC':
+        sort_order = 'DESC'
+    else:
+        sort_order = 'ASC'
+
     total_pages = 0
     total_records = 0
     records = 0
     record_offset = (page-1) * results_per_page
-    total_records = query_db(palmqueries['get_count_lowest_surviving_for_all_palms'], args=(search_term,), one=True)[0]
-    records = query_db(palmqueries['get_lowest_surviving_for_all_palms'], (search_term, results_per_page, record_offset))
+    total_records = query_db(palmqueries['get_count_lowest_survived_for_all_palms'], args=(search_term,), one=True)[0]
+    adjusted_query = palmqueries['get_lowest_survived_for_all_palms'] + f' ORDER BY {sort_by} {sort_order} LIMIT ? OFFSET ?'
+    #print("ADJUSTED QUERY: ", adjusted_query)
+    records = query_db(adjusted_query, (search_term, results_per_page, record_offset))
 
     total_pages = math.ceil(total_records / results_per_page)
     has_previous_page = False
@@ -113,14 +138,29 @@ def get_lowest_surviving():
             'page': page,
             'results_per_page': results_per_page,
             'search': search_term,
+            'sort_by': sort_by_ui,
+            'sort_order': sort_order,
         }
     }
 
 @api.route('/<int:palm_id>/stat/<stat_name>', methods=['GET'])
 def get_stat(palm_id, stat_name):
     record:Optional[sqlite3.row]
+    stat_name = stat_name.upper()
+    query_name = ''
+    print("STAT NAME:", stat_name)
     try:
-        record = query_db(palmqueries[f'get_stat_{stat_name}'], (palm_id,), one=True)
+        if stat_name == 'NUMEVENTS':
+            query_name = 'get_stat_num_events'
+        elif stat_name == 'LOWESTSURVIVED':
+            query_name = 'get_stat_lowest_survived'
+        elif stat_name == 'NUMOBSERVATIONS':
+            query_name = 'get_stat_num_observations'
+        else:
+            raise KeyError(f'Unknown stat name: {stat_name}')
+        
+
+        record = query_db(palmqueries[f'{query_name}'], (palm_id,), one=True)
     except KeyError:
         record = None
     except TypeError:

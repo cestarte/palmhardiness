@@ -249,13 +249,21 @@ class VanillaTable {
         let $tr = document.createElement('tr')
         columns.forEach(column => {
             let $th = document.createElement('th')
-            $th.classList.add('is-primary')
+            $th.classList.add('is-primary', 'has-text-black')
+            $th.setAttribute('data-col-name', column.name)
             if (column.label) {
                 $th.innerText = column.label
             } else if (column.custom_label) {
                 $th.innerHTML = column.custom_label
             } else {
                 $th.innerText = column.name
+            }
+            if (column.on_click && typeof column.on_click === 'function') {
+                $th.addEventListener('click', (event) => {
+                    if (this.debug)
+                        console.log('header cell clicked', column.name)
+                    column.on_click(column.name, $th)
+                })
             }
             $tr.appendChild($th)
         })

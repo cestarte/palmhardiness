@@ -83,6 +83,28 @@ CREATE TABLE IF NOT EXISTS "Palm" (
 INSERT INTO Palm (Id, LegacyId, Genus, Species, Variety, CommonName, ZoneId, LastModified, WhoModified) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
 
+    "drop_view_lowest_survived_temps": """
+DROP VIEW IF EXISTS v_palmlowestsurvivedtemps
+    """,
+
+    "create_view_lowest_survived_temps": """
+CREATE VIEW v_palmlowestsurvivedtemps AS
+SELECT 
+  P.Id
+  ,TRIM(COALESCE(Genus, '') || ' ' || COALESCE(Species, '')) AS Name
+  ,D.Text
+  ,MIN(O.LowTemp) AS [Min]
+  ,MAX(O.LowTemp) AS [Max]
+  ,ROUND(AVG(O.LowTemp), 2) AS [Average]
+  ,COUNT(*) AS [Records]
+FROM PalmObservation AS O
+  INNER JOIN Palm AS P ON O.PalmId = P.Id
+  INNER JOIN Damage AS D ON O.DamageId = D.Id
+WHERE UPPER(D.Text) NOT LIKE 'DEATH'
+  AND UPPER(D.Text) NOT LIKE 'NO CONFIRMATION'
+GROUP BY Genus, Species;
+    """,
+
     "select_by_legacy_id": """
 SELECT Id
 FROM Palm
@@ -130,52 +152,26 @@ WHERE PalmObservation.PalmId = ?
 ORDER BY PalmObservation.LowTemp DESC
     """,
 
-  "get_count_lowest_surviving_for_all_palms": """
+  "get_count_lowest_survived_for_all_palms": """
 SELECT COUNT(*)
 FROM (
-  WITH vars AS (SELECT UPPER(?) AS term)
-  SELECT 
-    P.Id
-    ,P.Genus
-    ,P.Species
-  FROM PalmObservation AS O, vars
-    INNER JOIN Palm AS P ON O.PalmId = P.Id
-    INNER JOIN Damage AS D ON O.DamageId = D.Id
-  WHERE UPPER(D.Text) NOT LIKE 'DEATH'
-    AND UPPER(D.Text) NOT LIKE 'NO CONFIRMATION%'
-    AND (term is NULL 
-        OR INSTR(UPPER(Genus), term) > 0 
-        OR INSTR(UPPER(Species), term) > 0)
-  GROUP BY Genus, Species
+WITH vars AS (SELECT UPPER(?) AS term)
+SELECT v_palmlowestsurvivedtemps.*
+FROM v_palmlowestsurvivedtemps, vars
+WHERE (term is NULL 
+      OR INSTR(UPPER(Name), term) > 0)
 )
 """,
 
-  "get_lowest_surviving_for_all_palms": """
+  "get_lowest_survived_for_all_palms": """
 WITH vars AS (SELECT UPPER(?) AS term)
-SELECT 
-  P.Id
-  ,D.Text
-  ,P.Genus
-  ,P.Species
-  ,TRIM(COALESCE(Genus, '') || ' ' || COALESCE(Species, '')) AS PalmName
-  ,MIN(O.LowTemp) AS [Min]
-  ,MAX(O.LowTemp) AS [Max]
-  ,ROUND(AVG(O.LowTemp), 2) AS [Average]
-  ,COUNT(*) AS [Records]
-FROM PalmObservation AS O, vars
-  INNER JOIN Palm AS P ON O.PalmId = P.Id
-  INNER JOIN Damage AS D ON O.DamageId = D.Id
-WHERE UPPER(D.Text) NOT LIKE 'DEATH'
-  AND UPPER(D.Text) NOT LIKE 'NO CONFIRMATION'
-  AND (term is NULL 
-      OR INSTR(UPPER(Genus), term) > 0 
-      OR INSTR(UPPER(Species), term) > 0)
-GROUP BY Genus, Species
-ORDER BY  Genus ASC, Species ASC, [Min] ASC
-LIMIT ? OFFSET ?
+SELECT v_palmlowestsurvivedtemps.*
+FROM v_palmlowestsurvivedtemps, vars
+WHERE (term is NULL 
+      OR INSTR(UPPER(Name), term) > 0)
     """,
 
-    "get_stat_LOWESTSURVIVED": """
+    "get_stat_lowest_survived": """
 SELECT MIN(o.LowTemp) AS [value]
 FROM PalmObservation AS o
 INNER JOIN Palm AS p ON o.PalmId = p.Id
@@ -184,14 +180,14 @@ WHERE p.Id = ?
     AND (UPPER(d.Text) NOT LIKE 'DEATH' AND UPPER(d.Text) NOT LIKE 'NO CONFIRMATION')
     """,
 
-    "get_stat_NUMOBSERVATIONS": """
+    "get_stat_num_observations": """
 SELECT COUNT(*) AS [value]
 FROM PalmObservation AS o
 INNER JOIN Palm AS p ON o.PalmId = p.Id
 WHERE p.Id = ?
     """,
 
-    "get_stat_NUMEVENTS": """
+    "get_stat_num_events": """
 SELECT COUNT(event) AS [value]
 FROM (
     SELECT DISTINCT(e.Id) AS [event]
@@ -203,7 +199,7 @@ FROM (
 )
     """,
 
-    "get_stat_MOSTREPORTEDBY": """
+    "get_stat_most_reported_by": """
 SELECT [who] AS [value]
 FROM (
     SELECT 
@@ -219,7 +215,7 @@ ORDER BY [count] DESC
 LIMIT 1
     """,
 
-    "get_stat_MOSTCOMMONLOCATION": """
+    "get_stat_most_common_location": """
 SELECT [location] AS [value]
 	,COUNT(*) AS [count]
 FROM (
