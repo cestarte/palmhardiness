@@ -18,46 +18,131 @@ window.onload = async function () {
                 }
             },
             {
-                'name': 'name',
-                'label': 'Genus, Species',
+                'name': 'longname',
+                'custom_label': '<span style="white-space: nowrap;">Genus, Species, Variety</span>',
                 'width': '50%',
                 'on_click': (colName, $th) => {
                     const sortOrder = toggleSortOrder($th)
                     onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
-                }
+                },
             },
             {
-                'name': 'min',
-                'label': 'Lowest Observed',
+                'name': 'zonename',
+                'custom_label': `                   
+                <div class="dropdown is-hoverable">
+                    <div class="dropdown-trigger" style="white-space: nowrap;">
+                        Zone <i class="fa-solid fa-circle-info is-size-7" aria-haspopup="true"
+                            aria-controls="zone-help"></i>
+                    </div>
+                    <div class="dropdown-menu" id="zone-help" role="menu">
+                        <div class="dropdown-content">
+                            <div class="dropdown-item is-size-7 has-text-weight-normal">
+                                <p>USDA Hardiness Zones are based on the average annual minimum
+                                    temperature.</p>
+                                <a target="_blank" href="https://planthardiness.ars.usda.gov/"> <i
+                                        class="fa-solid fa-arrow-up-right-from-square"></i> More info at
+                                    usda.gov</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>`,
                 'on_click': (colName, $th) => {
                     const sortOrder = toggleSortOrder($th)
                     onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
                 }
             },
             {
-                'name': 'max',
-                'label': 'Highest (Low) Observed',
+                'name': 'totalobservations',
+                'label': 'Total Observations',
                 'on_click': (colName, $th) => {
                     const sortOrder = toggleSortOrder($th)
                     onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
                 }
             },
             {
-                'name': 'average',
-                'label': 'Average',
+                'name': 'highestdamagingtemp',
+                'label': 'Warmest Damage',
+                'on_click': (colName, $th) => {
+                    const sortOrder = toggleSortOrder($th)
+                    onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
+                },
+                'formatters': ['fahrenheitWithCelsius']
+            },
+            {
+                'name': 'highestkillingtemp',
+                'label': 'Warmest Death',
+                'on_click': (colName, $th) => {
+                    const sortOrder = toggleSortOrder($th)
+                    onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
+                },
+                'formatters': ['fahrenheitWithCelsius']
+            },
+            {
+                'name': 'lowestsurvivedtemp',
+                'label': 'Coldest Survived',
+                'on_click': (colName, $th) => {
+                    const sortOrder = toggleSortOrder($th)
+                    onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
+                },
+                'formatters': ['fahrenheitWithCelsius']
+            },
+            {
+                'name': 'lowestundamagedtemp',
+                'label': 'Coldest Undamaged',
+                'on_click': (colName, $th) => {
+                    const sortOrder = toggleSortOrder($th)
+                    onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
+                },
+                'formatters': ['fahrenheitWithCelsius']
+            },
+            {
+                'name': 'survived30count',
+                'label': 'Survived 30°F',
                 'on_click': (colName, $th) => {
                     const sortOrder = toggleSortOrder($th)
                     onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
                 }
             },
             {
-                'name': 'records',
-                'label': 'Observations',
+                'name': 'survived25count',
+                'label': 'Survived 25°F',
                 'on_click': (colName, $th) => {
                     const sortOrder = toggleSortOrder($th)
                     onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
                 }
-            }
+            },
+            {
+                'name': 'survived20count',
+                'label': 'Survived 20°F',
+                'on_click': (colName, $th) => {
+                    const sortOrder = toggleSortOrder($th)
+                    onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
+                }
+            },
+            {
+                'name': 'survived15count',
+                'label': 'Survived 15°F',
+                'on_click': (colName, $th) => {
+                    const sortOrder = toggleSortOrder($th)
+                    onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
+                }
+            },
+            {
+                'name': 'survived10count',
+                'label': 'Survived 10°F',
+                'on_click': (colName, $th) => {
+                    const sortOrder = toggleSortOrder($th)
+                    onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
+                }
+            },
+            {
+                'name': 'survived5count',
+                'label': 'Survived 5°F',
+                'on_click': (colName, $th) => {
+                    const sortOrder = toggleSortOrder($th)
+                    onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
+                }
+            },
         ]
     }
     vanilla = new VanillaTable(options)
@@ -161,7 +246,7 @@ async function onLoadLowestSurvivingTable(event, meta = null) {
 async function getObservations(meta) {
     // Build the URL from the meta object.
     // localhost:5000/api/palm/?offset=0&page=2&results_per_page=15
-    let url = '/api/palm/lowestsurvived'
+    let url = '/api/palm/temps'
 
     // Object may have multiple query parameters.
     if (meta && typeof meta === 'object') {

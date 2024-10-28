@@ -167,3 +167,99 @@ def get_stat(palm_id, stat_name):
         record = None
 
     return format_record(record) if record is not None else json.loads('{"value": null}')
+
+@api.route('/temps', methods=['GET'])
+def get_temps():
+    page = request.args.get('page', 1, type=int)
+    results_per_page = request.args.get('results_per_page', 15, type=int)
+    search_term = request.args.get('search', None, type=str)
+    sort_by_ui = request.args.get('sort_by', 'name', type=str)
+    sort_order = request.args.get('sort_order', 'asc', type=str)
+
+    # sanity check the inputs
+    if page < 1:
+        page = 1
+    if results_per_page < 1:
+        results_per_page = 15
+    if results_per_page > 100:
+        results_per_page = 100
+    if search_term is not None and len(search_term) < 2:
+        search_term = None
+
+    # translate the UI sort_by column to the actual SQL column name
+    sort_by = sort_by_ui.upper()
+    print('SORT BY:', sort_by)
+
+    if sort_by == 'LONGNAME':
+        sort_by = '[LongName]'
+    elif sort_by == 'ZONENAME':
+        sort_by = '[ZoneName]'
+    elif sort_by == 'COMMONNAME':
+        sort_by = '[CommonName]'
+    elif sort_by == 'LOWESTSURVIVEDTEMP':
+        sort_by = '[LowestSurvivedTemp]'
+    elif sort_by == 'LOWESTDAMAGINGTEMP':
+        sort_by = '[LowestDamagingTemp]'
+    elif sort_by == 'LOWESTUNDAMAGEDTEMP':
+        sort_by = '[LowestUndamagedTemp]'
+    elif sort_by == 'HIGHESTDAMAGINGTEMP':
+        sort_by = '[HighestDamagingTemp]'
+    elif sort_by == 'HIGHESTKILLINGTEMP':
+        sort_by = '[HighestKillingTemp]'
+    elif sort_by == 'TOTALOBSERVATIONS':
+        sort_by = '[TotalObservations]'
+    elif sort_by == 'SURVIVED30COUNT':
+        sort_by = '[Survived30Count]'
+    elif sort_by == 'SURVIVED25COUNT':
+        sort_by = '[Survived25Count]'
+    elif sort_by == 'SURVIVED20COUNT':
+        sort_by = '[Survived20Count]'
+    elif sort_by == 'SURVIVED15COUNT':
+        sort_by = '[Survived15Count]'
+    elif sort_by == 'SURVIVED10COUNT':
+        sort_by = '[Survived10Count]'
+    elif sort_by == 'SURVIVED5COUNT':
+        sort_by = '[Survived5Count]'
+    else:
+        sort_by = '[LongName]'
+
+    # translate the UI sort_order to the actual SQL sort order
+    if not sort_order or sort_order.upper() == 'DESC':
+        sort_order = 'DESC'
+    else:
+        sort_order = 'ASC'
+
+    total_pages = 0
+    total_records = query_db(palmqueries['get_count_temps'], args=(search_term,), one=True)[0]
+    records = 0
+    record_offset = (page-1) * results_per_page
+    adjusted_query = palmqueries['get_temps'] + f' ORDER BY {sort_by} {sort_order} NULLS LAST LIMIT ? OFFSET ?'
+    #print("ADJUSTED QUERY: ", adjusted_query)
+    records = query_db(adjusted_query, (search_term, results_per_page, record_offset))
+
+    total_pages = math.ceil(total_records / results_per_page)
+    has_previous_page = False
+    has_next_page = False
+    if total_pages == 0:
+        page = 0
+    if page > 1:
+        has_previous_page = True
+    if total_pages > page:
+        has_next_page = True
+    
+    return {
+        'records': format_records(records), 
+        'meta': {
+            'offset': record_offset, 
+            'results_on_this_page': len(records), 
+            'total_results': total_records,
+            'total_pages': total_pages,
+            'has_previous_page': has_previous_page,
+            'has_next_page': has_next_page,
+            'page': page,
+            'results_per_page': results_per_page,
+            'search': search_term,
+            'sort_by': sort_by_ui,
+            'sort_order': sort_order,
+        }
+    }

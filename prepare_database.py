@@ -23,6 +23,7 @@ def drop_tables(database_path):
         ("Synonym", synonymrepo.queries['drop']),
         ("Zone", zonerepo.queries['drop']),
         #("Location", locationrepo.queries['drop']),
+        ("palm views", palmrepo.queries['drop_views']),
     ]
 
     print("Dropping tables...")
@@ -66,6 +67,7 @@ def create_tables(database_path):
         ("Cycad", cycadrepo.queries['create']),
         ("Cycad Observation", cycadobservationrepo.queries['create']),
         ("Location", locationrepo.queries['create']),
+        ("palm views", palmrepo.queries['create_views']),
     ]
 
     print("Creating tables...")
