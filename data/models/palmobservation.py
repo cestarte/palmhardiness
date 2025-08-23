@@ -4,15 +4,15 @@ from json import JSONEncoder
 class PalmObservation:
     def __init__(self):
         self.id:int | None = None
-        self.legacy_id:int
+        self.genus:str | None = None
+        self.species:str | None = None
+        self.variety:str | None = None
         self.palm_id:int
-        self.palm_legacy_id:int
         self.who_reported:str
         self.city:str | None = None
         self.state:str | None = None
         self.country:str
         self.damage_id:int
-        self.damage_legacy_id:int
         self.event_legacy_id:int
         self.event_id:int
         self.description:str
@@ -28,8 +28,10 @@ class PalmObservation:
         self.event_who_reported:str | None = None
         self.damage_text:str | None = None
         self.location:str | None = None
+        self.genus:str | None = None
+        self.species:str | None = None
+        self.variety:str | None = None
 
-    
 class PalmObservationSerializer(JSONEncoder):
     def default(self, o):
         if isinstance(o, PalmObservation):
@@ -48,15 +50,12 @@ class PalmObservationSerializer(JSONEncoder):
 
             return {
                 "id": o.id,
-                "legacy_id": o.legacy_id,
                 "palm_id": o.palm_id,
-                "palm_legacy_id": o.palm_legacy_id,
                 "who_reported": o.who_reported,
                 "city": o.city,
                 "state": o.state,
                 "country": o.country,
                 "damage_id": o.damage_id,
-                "damage_legacy_id": o.damage_legacy_id,
                 "event_legacy_id": o.event_legacy_id,
                 "event_id": o.event_id,
                 "description": o.description,

@@ -32,7 +32,7 @@ def drop_tables(database_path):
         cur = con.cursor()
         for query in drop_queries:
             print("\t" + query[0])
-            cur.execute(query[1])
+            cur.executescript(query[1])
             con.commit()
     except sqlite3.Error as error:
         print("Error while deleting tables from sqlite", error)
@@ -46,7 +46,7 @@ def drop_location_table(database_path):
     try:
         con = sqlite3.connect(database_path)
         cur = con.cursor()
-        cur.execute(locationrepo.queries['drop'])
+        cur.executescript(locationrepo.queries['drop'])
         con.commit()
     except sqlite3.Error as error:
         print("Error while deleting Location table from sqlite", error)
@@ -76,7 +76,7 @@ def create_tables(database_path):
         cur = con.cursor()
         for query in create_queries:
             print("\t" + query[0])
-            cur.execute(query[1])
+            cur.executescript(query[1])
             con.commit()
     except sqlite3.Error as error:
         print("Error while creating sqlite tables.", error)

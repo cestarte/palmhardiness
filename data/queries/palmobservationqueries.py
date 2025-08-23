@@ -6,18 +6,15 @@ DROP TABLE IF EXISTS "PalmObservation"
     "create": """
 CREATE TABLE IF NOT EXISTS "PalmObservation" (
     "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-    "LegacyId" integer,
     "LastModified" timestamp NOT NULL,
     "WhoModified" varchar(128) NOT NULL,
     "PalmId" integer NOT NULL,
-    "PalmLegacyId" integer NOT NULL,
     "WhoReported" varchar(512) NOT NULL,
     "City" varchar(512) NOT NULL,
     "State" varchar(512),
     "Country" varchar NOT NULL,
     "LowTemp" real NOT NULL,
     "DamageId" integer NOT NULL,
-    "DamageLegacyId" integer NOT NULL,
     "Description" varchar,
     "Source" varchar,
     "EventId" integer,
@@ -31,7 +28,7 @@ CREATE TABLE IF NOT EXISTS "PalmObservation" (
     """,
 
     "insert": """
-INSERT INTO PalmObservation (LegacyId, PalmId, PalmLegacyId, WhoReported, City, State, Country, DamageId, DamageLegacyId, EventId, EventLegacyId, Description, Source, LowTemp, LastModified, WhoModified) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+INSERT INTO PalmObservation (PalmId, WhoReported, City, State, Country, DamageId, EventId, EventLegacyId, Description, Source, LowTemp, LastModified, WhoModified) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
     """,
 
     "get_all_for_palm": """
