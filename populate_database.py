@@ -68,7 +68,6 @@ def perform_import(excel_path, database_path):
     palmobservations = palmobservationrepo.translate_ids(database_path, palmobservations)
     palmobservationrepo.write_to_database(database_path, palmobservations)
 
-    input("Press Enter to continue...")
     cycads = cycadrepo.read_from_excel(excel_path, "Cycads_tbl")
     cycadrepo.write_to_database(database_path, cycads)
 

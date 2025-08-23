@@ -12,9 +12,11 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
     ws = wb[sheet]
 
     for row in ws.iter_rows(min_row=first_row_with_data, values_only=True):
+        if row[0] is None or row[0] == "":
+            continue
+
         cycad = Cycad()
         cycad.id = None
-        cycad.legacy_id = row[0]
         cycad.genus = clean(row[1])
         cycad.species = clean(row[2])
         cycad.variety = clean(row[3])
@@ -22,13 +24,14 @@ def read_from_excel(workbook:str, sheet:str, first_row_with_data:int=2) -> list[
         cycad.zone_name = clean(row[5])
         cycad.zone_id = -1
 
-        if '2023' in workbook and cycad.legacy_id == 8025 and cycad.genus is None:
-            print("[WARNING] Correcting for empty entry in 2023 spreadsheet. Ignoring row w/ id 8025")
-            continue
 
-        if '2024' in workbook and cycad.genus is None:
-            print("[WARNING] Ignoring entry with missing genus in 2024 spreadsheet. Ignoring row w/ id", cycad.legacy_id)
-            continue
+
+        if cycad.species == 'NULL':
+            cycad.species = None
+        if cycad.variety == 'NULL':
+            cycad.variety = None
+        if cycad.common_name == 'NULL':
+            cycad.common_name = None
 
         cycads.append(cycad)
 

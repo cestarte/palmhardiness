@@ -59,16 +59,14 @@ def translate_ids(database_path:str, observations:list[PalmObservation]) -> list
         )
         cur = con.cursor()
 
-        count = 0
         for o in observations:
             # Find the database's palm Id by using the genus, species, and variety
             cur.execute(palmqueries["select_by_genus_species_variety"], 
                         (o.genus, o.species, o.variety,),)
             result = cur.fetchone()
             if result is None:
-                count += 1
                 print(
-                    f"{count}: [WARNING] Couldn't find a matching palm for '{o.genus}', '{o.species}', '{o.variety}'. This observation will not be included."
+                    f"[WARNING] Couldn't find a matching palm for '{o.genus}', '{o.species}', '{o.variety}'. This observation will not be included."
                 )
                 continue
             else:

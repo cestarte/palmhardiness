@@ -6,18 +6,15 @@ DROP TABLE IF EXISTS "CycadObservation"
     "create": """
 CREATE TABLE IF NOT EXISTS "CycadObservation" (
     "Id" integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-    "LegacyId" integer,
     "LastModified" timestamp NOT NULL,
     "WhoModified" varchar(128) NOT NULL,
     "CycadId" integer NOT NULL,
-    "CycadLegacyId" integer NOT NULL,
     "WhoReported" varchar(512) NOT NULL,
     "City" varchar(512) NOT NULL,
     "State" varchar(512),
     "Country" varchar NOT NULL,
     "LowTemp" real NOT NULL,
     "DamageId" integer NOT NULL,
-    "DamageLegacyId" integer NOT NULL,
     "Description" varchar,
     "Source" varchar,
     "EventId" integer,

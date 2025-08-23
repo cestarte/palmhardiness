@@ -27,6 +27,15 @@ WHERE LegacyId = ?
 LIMIT 1
     """,
 
+# Query takes 3 parameters: genus, species, variety
+  "select_by_genus_species_variety": """
+SELECT Id
+FROM Cycad
+WHERE Genus = ?1 
+  AND (CASE WHEN ?2 = 'None' THEN Species IS NULL ELSE Species IS ?2 END)
+  AND (CASE WHEN ?3 = 'None' THEN Variety IS NULL ELSE Variety IS ?3 END)
+    """,
+
     "get_count": """
 SELECT COUNT(*) as count
 FROM (
