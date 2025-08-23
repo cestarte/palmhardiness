@@ -1,5 +1,4 @@
 import argparse
-from data.repositories import zonerepo
 from data.repositories import damagerepo
 from data.repositories import synonymrepo
 from data.repositories import eventrepo
@@ -47,9 +46,6 @@ def main():
     
 
 def perform_import(excel_path, database_path):
-    zones = zonerepo.read_from_excel(excel_path, "Zones_tbl")
-    zonerepo.write_to_database(database_path, zones)
-
     damages = damagerepo.read_from_excel(excel_path, "Damage_tbl")
     damagerepo.write_to_database(database_path, damages)
 

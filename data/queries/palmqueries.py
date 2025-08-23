@@ -5,7 +5,6 @@ FROM (
         WITH vars AS (SELECT ? AS filterObserved, UPPER(?) AS term)
         SELECT COUNT(*) as ObservationCount
         FROM Palm, vars
-        LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
         LEFT JOIN PalmObservation ON Palm.Id = PalmObservation.PalmId
         -- Allow unobserved unless we are filtering them out
         WHERE (PalmObservation.Id IS NOT NULL OR filterObserved = 0)
@@ -15,7 +14,6 @@ FROM (
                 OR INSTR(UPPER(Species), term) > 0 
                 OR INSTR(UPPER(Variety), term) > 0 
                 OR INSTR(UPPER(CommonName), term) > 0
-                OR INSTR(UPPER(Zone.Name), term) > 0
     )
     GROUP BY Palm.Id
 )
@@ -25,10 +23,8 @@ FROM (
 WITH vars AS (SELECT ? AS filterObserved, UPPER(?) AS term)
 SELECT Palm.*
     ,TRIM(COALESCE(Genus, '') || ' ' || COALESCE(Species, '') || ' ' || COALESCE(Variety, ''))  AS LongName
-    ,Zone.Name as ZoneName
     ,COUNT(PalmObservation.Id) as ObservationCount
 FROM Palm, vars
-LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
 LEFT JOIN PalmObservation ON Palm.Id = PalmObservation.PalmId
 -- Allow unobserved unless we are filtering them out
 WHERE (PalmObservation.Id IS NOT NULL OR filterObserved = 0)
@@ -38,7 +34,6 @@ WHERE (PalmObservation.Id IS NOT NULL OR filterObserved = 0)
         OR INSTR(UPPER(Species), term) > 0 
         OR INSTR(UPPER(Variety), term) > 0 
         OR INSTR(UPPER(CommonName), term) > 0
-        OR INSTR(UPPER(Zone.Name), term) > 0
     )
 GROUP BY Palm.Id
 ORDER BY Genus, Species, Variety
@@ -49,12 +44,10 @@ LIMIT ? OFFSET ?
     "get_one": """
 SELECT Palm.*
     ,TRIM(COALESCE(Palm.Genus, '') || ' ' || COALESCE(Palm.Species, '') || ' ' || COALESCE(Palm.Variety, '')) AS PalmName
-    ,Zone.Name as ZoneName
 	,(SELECT COUNT(*) 
 		FROM PalmObservation
 	WHERE PalmId = Palm.Id) AS [ObservationCount]
 FROM Palm
-LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
 WHERE Palm.Id = ?
     """,
 
@@ -72,15 +65,13 @@ CREATE TABLE IF NOT EXISTS "Palm" (
   "Species" varchar(256),
   "Variety" varchar(256),
   "CommonName" varchar(256),
-  "ZoneId" integer NOT NULL,
   "LastModified" timestamp NOT NULL,
-  "WhoModified" varchar(128) NOT NULL,
-  FOREIGN KEY (ZoneId) REFERENCES "Zone" (Id)
+  "WhoModified" varchar(128) NOT NULL
 );
     """,
 
     "insert": """
-INSERT INTO Palm (Id, LegacyId, Genus, Species, Variety, CommonName, ZoneId, LastModified, WhoModified) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Palm (Id, LegacyId, Genus, Species, Variety, CommonName, LastModified, WhoModified) VALUES(?, ?, ?, ?, ?, ?, ?, ?)
     """,
 
     "drop_views": """
@@ -232,7 +223,6 @@ SELECT
   p.Id
   ,TRIM(COALESCE(p.Genus, '') || ' ' || COALESCE(p.Species, '') || ' ' || COALESCE(p.Variety, '')) AS LongName
   ,p.CommonName
-  ,z.Name AS ZoneName
   ,hdt.HighestDamagingTemp
   ,(CASE WHEN hdt.Count IS NULL THEN 0 ELSE hdt.Count END) AS [HighestDamagingTempCount]
   ,hkt.HighestKillingTemp
@@ -260,7 +250,6 @@ LEFT JOIN v_palm_survival15 AS s15 on po.PalmId = s15.Id
 LEFT JOIN v_palm_survival10 AS s10 on po.PalmId = s10.Id
 LEFT JOIN v_palm_survival5 AS s5 on po.PalmId = s5.Id
 LEFT JOIN Palm AS p ON p.Id = po.PalmId
-LEFT JOIN Zone AS z ON p.ZoneId = z.Id
 GROUP BY p.Id;
     """,
 
@@ -270,7 +259,6 @@ SELECT COUNT(*)
 FROM v_palm_temps, vars
 WHERE (term is NULL
     OR INSTR(UPPER(CommonName), term) > 0
-    OR INSTR(UPPER(ZoneName), term) > 0
     OR INSTR(UPPER(LongName), term) > 0
 )
     """,
@@ -281,7 +269,6 @@ SELECT *
 FROM v_palm_temps, vars
 WHERE (term is NULL
     OR INSTR(UPPER(CommonName), term) > 0
-    OR INSTR(UPPER(ZoneName), term) > 0
     OR INSTR(UPPER(LongName), term) > 0
 )
     """,
@@ -304,10 +291,8 @@ WHERE Genus = ?1
 
     "get_all_with_palmobservation_count": """
 SELECT Palm.*
-    ,Zone.Name as ZoneName
     ,COUNT(PalmObservation.Id) as ObservationCount
 FROM Palm
-LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
 LEFT JOIN PalmObservation ON Palm.Id = PalmObservation.PalmId
 GROUP BY Palm.Id
 ORDER BY Genus, Species, Variety
@@ -326,8 +311,6 @@ SELECT PalmObservation.LegacyId
     ,Palm.Species as PalmSpecies
     ,Palm.Variety as PalmVariety
     ,Palm.CommonName as PalmCommonName
-    ,Palm.ZoneId as PalmZoneId
-    ,Zone.Name as ZoneName
     ,Location.City as LocationCity
     ,Location.State as LocationState
     ,Location.Country as LocationCountry
@@ -336,7 +319,6 @@ SELECT PalmObservation.LegacyId
 	,TRIM(COALESCE(Location.City, '') || ', ' || COALESCE(Location.State, '') || ', ' || COALESCE(Location.Country, ''), ', ') AS LocationName
 FROM PalmObservation
 LEFT JOIN Palm ON PalmObservation.PalmId = Palm.Id
-LEFT JOIN Zone ON Palm.ZoneId = Zone.Id
 LEFT JOIN Location ON PalmObservation.LocationId = Location.Id
 WHERE PalmObservation.PalmId = ?
 ORDER BY PalmObservation.LowTemp DESC

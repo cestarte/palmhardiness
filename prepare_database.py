@@ -1,6 +1,5 @@
 import sqlite3
 import argparse
-from data.repositories import zonerepo
 from data.repositories import damagerepo
 from data.repositories import synonymrepo
 from data.repositories import eventrepo
@@ -21,7 +20,6 @@ def drop_tables(database_path):
         ("Damage", damagerepo.queries['drop']),
         ("Event", eventrepo.queries['drop']),
         ("Synonym", synonymrepo.queries['drop']),
-        ("Zone", zonerepo.queries['drop']),
         #("Location", locationrepo.queries['drop']),
         ("palm views", palmrepo.queries['drop_views']),
     ]
@@ -57,7 +55,6 @@ def drop_location_table(database_path):
 
 def create_tables(database_path):
     create_queries = [
-        ("Zone", zonerepo.queries['create']),
         ("Synonym", synonymrepo.queries['create']),
         ("Event", eventrepo.queries['create']),
         ("Damage", damagerepo.queries['create']),

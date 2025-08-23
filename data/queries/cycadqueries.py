@@ -9,15 +9,13 @@ CREATE TABLE IF NOT EXISTS "Cycad" (
 "Species" varchar(256),
 "Variety" varchar(256),
 "CommonName" varchar(256),
-"ZoneId" integer NOT NULL,
 "LastModified" timestamp NOT NULL,
-"WhoModified" varchar(128) NOT NULL,
-FOREIGN KEY (ZoneId) REFERENCES "Zone" (Id)
+"WhoModified" varchar(128) NOT NULL
 );
     """,
 
     "insert": """
-INSERT INTO Cycad (Id, LegacyId, Genus, Species, Variety, CommonName, ZoneId, LastModified, WhoModified) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Cycad (Id, LegacyId, Genus, Species, Variety, CommonName, LastModified, WhoModified) VALUES(?, ?, ?, ?, ?, ?, ?, ?)
     """,
 
     "select_by_legacy_id": """
@@ -42,7 +40,6 @@ FROM (
         WITH vars AS (SELECT ? AS filterObserved, UPPER(?) AS term)
         SELECT COUNT(*) as ObservationCount
         FROM Cycad, vars
-        LEFT JOIN Zone ON Cycad.ZoneId = Zone.Id
         LEFT JOIN CycadObservation ON Cycad.Id = CycadObservation.CycadId
         -- Allow unobserved unless we are filtering them out
         WHERE (CycadObservation.Id IS NOT NULL OR filterObserved = 0)
@@ -52,7 +49,6 @@ FROM (
                 OR INSTR(UPPER(Species), term) > 0 
                 OR INSTR(UPPER(Variety), term) > 0 
                 OR INSTR(UPPER(CommonName), term) > 0
-                OR INSTR(UPPER(Zone.Name), term) > 0
     )
     GROUP BY Cycad.Id
 )
@@ -62,10 +58,8 @@ FROM (
 WITH vars AS (SELECT ? AS filterObserved, UPPER(?) AS term)
 SELECT Cycad.*
     ,TRIM(COALESCE(Genus, '') || ' ' || COALESCE(Species, '') || ' ' || COALESCE(Variety, ''))  AS CycadName
-    ,Zone.Name as ZoneName
     ,COUNT(CycadObservation.Id) as ObservationCount
 FROM Cycad, vars
-LEFT JOIN Zone ON Cycad.ZoneId = Zone.Id
 LEFT JOIN CycadObservation ON Cycad.Id = CycadObservation.CycadId
 -- Allow unobserved unless we are filtering them out
 WHERE (CycadObservation.Id IS NOT NULL OR filterObserved = 0)
@@ -75,7 +69,6 @@ WHERE (CycadObservation.Id IS NOT NULL OR filterObserved = 0)
         OR INSTR(UPPER(Species), term) > 0 
         OR INSTR(UPPER(Variety), term) > 0 
         OR INSTR(UPPER(CommonName), term) > 0
-        OR INSTR(UPPER(Zone.Name), term) > 0
     )
 GROUP BY Cycad.Id
 ORDER BY Genus, Species, Variety
@@ -86,12 +79,10 @@ LIMIT ? OFFSET ?
     "get_one": """
 SELECT Cycad.*
     ,TRIM(COALESCE(Genus, '') || ' ' || COALESCE(Species, '') || ' ' || COALESCE(Variety, ''))  AS CycadName
-    ,Zone.Name as ZoneName
 	,(SELECT COUNT(*) 
 		FROM CycadObservation
 	WHERE CycadId = Cycad.Id) AS [ObservationCount]
 FROM Cycad
-LEFT JOIN Zone ON Cycad.ZoneId = Zone.Id
 WHERE Cycad.Id = ?
     """,
 }
