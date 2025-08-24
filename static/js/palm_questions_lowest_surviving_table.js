@@ -27,29 +27,8 @@ window.onload = async function () {
                 },
             },
             {
-                'name': 'zonename',
-                'custom_label': `                   
-                <div class="dropdown is-hoverable">
-                    <div class="dropdown-trigger" style="white-space: nowrap;">
-                        Zone <i class="fa-solid fa-circle-info is-size-7" aria-haspopup="true"
-                            aria-controls="zone-help"></i>
-                    </div>
-                    <div class="dropdown-menu" id="zone-help" role="menu">
-                        <div class="dropdown-content">
-                            <div class="dropdown-item is-size-7 has-text-weight-normal">
-                                <p>USDA Hardiness Zones are based on the average annual minimum
-                                    temperature.</p>
-                                <a target="_blank" href="https://planthardiness.ars.usda.gov/"> <i
-                                        class="fa-solid fa-arrow-up-right-from-square"></i> More info at
-                                    usda.gov</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>`,
-                'on_click': (colName, $th) => {
-                    const sortOrder = toggleSortOrder($th)
-                    onLoadLowestSurvivingTable(null, { 'sort_by': colName, 'sort_order': sortOrder })
-                }
+                'name': 'commonname',
+                'label': 'Common Name'
             },
             {
                 'name': 'totalobservations',

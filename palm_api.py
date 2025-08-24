@@ -192,8 +192,6 @@ def get_temps():
 
     if sort_by == 'LONGNAME':
         sort_by = '[LongName]'
-    elif sort_by == 'ZONENAME':
-        sort_by = '[ZoneName]'
     elif sort_by == 'COMMONNAME':
         sort_by = '[CommonName]'
     elif sort_by == 'LOWESTSURVIVEDTEMP':
