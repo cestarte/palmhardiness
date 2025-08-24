@@ -1,6 +1,5 @@
 import sqlite3
 import argparse
-from data.repositories import zonerepo
 from data.repositories import damagerepo
 from data.repositories import synonymrepo
 from data.repositories import eventrepo
@@ -21,8 +20,8 @@ def drop_tables(database_path):
         ("Damage", damagerepo.queries['drop']),
         ("Event", eventrepo.queries['drop']),
         ("Synonym", synonymrepo.queries['drop']),
-        ("Zone", zonerepo.queries['drop']),
         #("Location", locationrepo.queries['drop']),
+        ("palm views", palmrepo.queries['drop_views']),
     ]
 
     print("Dropping tables...")
@@ -31,7 +30,7 @@ def drop_tables(database_path):
         cur = con.cursor()
         for query in drop_queries:
             print("\t" + query[0])
-            cur.execute(query[1])
+            cur.executescript(query[1])
             con.commit()
     except sqlite3.Error as error:
         print("Error while deleting tables from sqlite", error)
@@ -45,7 +44,7 @@ def drop_location_table(database_path):
     try:
         con = sqlite3.connect(database_path)
         cur = con.cursor()
-        cur.execute(locationrepo.queries['drop'])
+        cur.executescript(locationrepo.queries['drop'])
         con.commit()
     except sqlite3.Error as error:
         print("Error while deleting Location table from sqlite", error)
@@ -56,7 +55,6 @@ def drop_location_table(database_path):
 
 def create_tables(database_path):
     create_queries = [
-        ("Zone", zonerepo.queries['create']),
         ("Synonym", synonymrepo.queries['create']),
         ("Event", eventrepo.queries['create']),
         ("Damage", damagerepo.queries['create']),
@@ -66,6 +64,7 @@ def create_tables(database_path):
         ("Cycad", cycadrepo.queries['create']),
         ("Cycad Observation", cycadobservationrepo.queries['create']),
         ("Location", locationrepo.queries['create']),
+        ("palm views", palmrepo.queries['create_views']),
     ]
 
     print("Creating tables...")
@@ -74,7 +73,7 @@ def create_tables(database_path):
         cur = con.cursor()
         for query in create_queries:
             print("\t" + query[0])
-            cur.execute(query[1])
+            cur.executescript(query[1])
             con.commit()
     except sqlite3.Error as error:
         print("Error while creating sqlite tables.", error)

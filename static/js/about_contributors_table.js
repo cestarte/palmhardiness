@@ -1,37 +1,32 @@
-const dataSourceOptions = {
-    'table_placeholder': 'datasource-table-placeholder',
+const contributorOptions = {
+    'table_placeholder': 'contributors-table-placeholder',
     'has_pagination': false,
     'columns': [
         {
-            'name': 'source',
-            'label': 'Source',
-            'formatters': ['link']
+            'name': 'whoreported',
+            'label': 'Data Contributor'
         },
         {
             'name': 'count',
             'label': 'Observations',
         },
-        {
-            'name': 'type',
-            'label': 'Type',
-        },
     ]
 }
-let dataSources = new VanillaTable(dataSourceOptions)
+let contributors = new VanillaTable(contributorOptions)
 
 // initial table population
-onLoadDataSourceTable(dataSources)
+onLoadDataSourceContributorsTable(contributors)
 
-async function onLoadDataSourceTable(vanillaTable) {
-    let sources = await getDataSources()
+async function onLoadDataSourceContributorsTable(vanillaTable) {
+    let sources = await getDataSourceContributors()
     vanillaTable.refreshTable(sources)
 }
 
-async function getDataSources() {
-    let url = '/api/datasource/sources'
+async function getDataSourceContributors() {
+    let url = '/api/datasource/contributors'
 
     // Always attempt to read from localstorage to save bandwidth.
-    let localStorageData = getFromLocalStorage(url)
+    let localStorageData = getFromLocalStorage(url+'contributors')
     if (localStorageData)
         return localStorageData
 
@@ -47,7 +42,7 @@ async function getDataSources() {
             throw new TypeError('Expected JSON response but got something else.')
 
         json = await response.json()
-        saveToLocalStorage(url, json)
+        saveToLocalStorage(url + 'contributors', json)
         return json
     } catch (error) {
         console.error('Failed to fetch the data source data.', error)

@@ -6,6 +6,26 @@ function listLocalStorageKeys() {
     }
 }
 
+function clearLocalStorageKeys() {
+    // Clear all keys that start with the namespace
+    // Sometimes in some browsers, looping through and 
+    // calling removeKeys() doesn't clear them all in one pass, or even in 
+    // a few passes. SO we'll loop until we're done or we hit a max number 
+    // of iterations.
+    let numRemoved = 0
+    const maxIterations = 50
+    let numIterations = 0
+    while (++numIterations <= maxIterations) {
+        for (let i = 0; i < localStorage.length; i++) {
+            if (localStorage.key(i).startsWith(NAMESPACE)) {
+                ++numRemoved
+                localStorage.removeItem(localStorage.key(i))
+            }
+        }
+    }
+    console.log(`Cleared ${numRemoved} keys from local storage.`)
+}
+
 function saveToLocalStorage(key, value, path = null) {
     if (!key)
         return

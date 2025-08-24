@@ -23,4 +23,11 @@ FROM Damage
 WHERE LegacyId = ?
 LIMIT 1
     """,
+
+    "select_by_text": """
+SELECT Id
+FROM Damage
+WHERE Text = ?
+LIMIT 1
+    """,
 }

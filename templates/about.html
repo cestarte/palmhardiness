@@ -12,13 +12,12 @@
 
 <h1 class="is-size-4">What is all this?</h1>
 <p class="mt-2">
-    Palm enthusiasts the world over are sharing their observations online in forums.
-    That's wonderful! But have you ever tried to recall the details you read in some
-    thread a month ago?
+    Palm enthusiasts the world over are sharing their observations online in forums. The information is out there 
+    but it's scattered across various forum threads and sites. 
     A large effort has been made to collect and organize this data by <a
         href="https://www.palmtalk.org/forum/profile/5832-kinzyjr/">kinzyjr</a>.
-    This goal of this app is to provide a web interface on top of that collected
-    data set to make it more easily accessible, with links back to the source
+    This goal of this app is to provide a web interface on top of that aggregated
+    data set for greater accessibility, with links back to the source
     for further reading.
 </p>
 <p class="mt-2">The data was gathered from various sources by <a
@@ -29,10 +28,7 @@
 
 <h1 class="is-size-4 mt-4" id="contribute"> <a href="#contribute"> <i
             class="fa-solid fa-link is-size-6 has-text-grey-lighter"></i></a> How can
-    I
-    contribute?</h1>
-
-<p class="mt-1">There are a few ways to contribute to the project:</p>
+    I contribute?</h1>
 
 <div class="columns mt-1">
     <div class="column is-fullwidth">
@@ -45,6 +41,10 @@
                 <p>Share your own observations on the
                     <a href="http://palmtalk.com">PalmTalk</a> forum!
                     Make a thread about your experience and include pictures.
+                    <br /> 
+                    <em>See the 
+                    <a href="https://www.palmtalk.org/forum/topic/61358-0000-cold-hardiness-observation-master-data/">data overview</a> 
+                    of kinzyjr's post to learn more about making good observations.</em>
                 </p>
             </div>
         </div>
@@ -58,9 +58,9 @@
             </div>
 
             <div class="column is-four-fifths">
-                <p>Ideas, suggestions, and feedback about the app can be
-                    sent to 5am on the PalmTalk forum. Concerns
-                    about the data should be directed to kinzyjr.</p>
+                <p>Concerns about the data should be directed to kinzyjr. 
+                    Suggestions or feedback about the web app can be
+                    sent to 5am on the PalmTalk forum.</p>
             </div>
         </div>
     </div>
@@ -73,30 +73,11 @@
             </div>
 
             <div class="column is-four-fifths">
-                <p>Do you write code? Check out the <a href="https://github.com/cestarte/palmhardiness">github</a>. It's
-                    very easy to run the app on your computer.</p>
+                <p>Do you write code? Check out the <a href="https://github.com/cestarte/palmhardiness">github</a> 
+                    to dive into the python, Javascript, and SQLite from your computer.</p>
             </div>
         </div>
     </div>
-</div>
-
-
-<h1 class="is-size-4 my-4" id="datasources">
-    <a href="#datasources">
-        <i class="fa-solid fa-link is-size-6 has-text-grey-lighter"></i>
-    </a>
-    Data Sources
-</h1>
-
-<article class="message mt-2 is-info">
-    <div class="message-body">
-        <p>There is no affiliation between this app and any of the wonderful data sources.</p>
-    </div>
-</article>
-
-<p class="mt-2">In the table, like-sources have been grouped together and then tallied.</p>
-
-<div id="datasource-table-placeholder">
 </div>
 
 <h1 class="is-size-4 mt-4" id="download"> <a href="#download"> <i
@@ -108,6 +89,25 @@
         href="https://www.palmtalk.org/forum/topic/61358-0000-cold-hardiness-observation-master-data/">https://www.palmtalk.org/forum/topic/61358-0000-cold-hardiness-observation-master-data/</a>.
     The app codebase is available at github here <a
         href="https://github.com/cestarte/palmhardiness">https://github.com/cestarte/palmhardiness</a>.</p>
+
+
+<h1 class="is-size-4 my-4" id="datasources">
+    <a href="#datasources">
+        <i class="fa-solid fa-link is-size-6 has-text-grey-lighter"></i>
+    </a>
+    Data Sources
+</h1>
+
+<p>This data in the following tables was read in from the spreadsheet mentioned above. The tables list the
+    number of observations from each datasource and the contributors of those observations. For more, see 
+    the <a href="https://www.palmtalk.org/forum/topic/61358-0000-cold-hardiness-observation-master-data/">credits</a> 
+    section of kinzyjr's post.</p>
+
+<div id="datasource-table-placeholder">
+</div>
+
+<div id="contributors-table-placeholder" class="mt-6">
+</div>
 
 
 <style>
@@ -131,5 +131,6 @@
 
 <script src="{{ url_for('static', filename='js/vanilla_table.js') }}"></script>
 <script src="{{ url_for('static', filename='js/about_datasource_table.js') }}"></script>
+<script src="{{ url_for('static', filename='js/about_contributors_table.js') }}"></script>
 
 {% endblock %}

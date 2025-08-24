@@ -8,6 +8,5 @@ class Palm:
         self.species = None
         self.variety = None
         self.common_name = None
-        self.zone_id = 0
         self.last_modified = datetime.now(timezone.utc)
         self.who_modified = "Excel Importer"

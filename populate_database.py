@@ -1,5 +1,4 @@
 import argparse
-from data.repositories import zonerepo
 from data.repositories import damagerepo
 from data.repositories import synonymrepo
 from data.repositories import eventrepo
@@ -47,9 +46,6 @@ def main():
     
 
 def perform_import(excel_path, database_path):
-    zones = zonerepo.read_from_excel(excel_path, "Zones_tbl")
-    zonerepo.write_to_database(database_path, zones)
-
     damages = damagerepo.read_from_excel(excel_path, "Damage_tbl")
     damagerepo.write_to_database(database_path, damages)
 
@@ -64,14 +60,14 @@ def perform_import(excel_path, database_path):
 
     palmsynonymrepo.connect(database_path)
 
-    palmobservations = palmobservationrepo.read_from_excel(excel_path, "HardinessPalms_tbl")
+    palmobservations = palmobservationrepo.read_from_excel(excel_path, "HardinessObs_Palms")
     palmobservations = palmobservationrepo.translate_ids(database_path, palmobservations)
-    palmobservationrepo.write_to_database(database_path, palmobservations)    
+    palmobservationrepo.write_to_database(database_path, palmobservations)
 
     cycads = cycadrepo.read_from_excel(excel_path, "Cycads_tbl")
     cycadrepo.write_to_database(database_path, cycads)
 
-    cycadobservations = cycadobservationrepo.read_from_excel(excel_path, "HardinessCycads_tbl")
+    cycadobservations = cycadobservationrepo.read_from_excel(excel_path, "HardinessObs_Cycads")
     cycadobservations = cycadobservationrepo.translate_ids(database_path, cycadobservations)
     cycadobservationrepo.write_to_database(database_path, cycadobservations)    
 

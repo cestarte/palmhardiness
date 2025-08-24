@@ -201,12 +201,14 @@ class VanillaTable {
 
         let $tableContainer = document.createElement('div')
         $tableContainer.innerHTML = `
-            <table class="table is-striped is-fullwidth" id="observation-table">
-                <thead>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table class="table is-striped is-fullwidth is-narrow" id="observation-table">
+                    <thead>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
         `
         this.$placeholder.appendChild($tableContainer)
         this.$table = this.$placeholder.querySelector('table')
@@ -249,13 +251,21 @@ class VanillaTable {
         let $tr = document.createElement('tr')
         columns.forEach(column => {
             let $th = document.createElement('th')
-            $th.classList.add('is-primary')
+            $th.classList.add('is-primary', 'has-text-black')
+            $th.setAttribute('data-col-name', column.name)
             if (column.label) {
                 $th.innerText = column.label
             } else if (column.custom_label) {
                 $th.innerHTML = column.custom_label
             } else {
                 $th.innerText = column.name
+            }
+            if (column.on_click && typeof column.on_click === 'function') {
+                $th.addEventListener('click', (event) => {
+                    if (this.debug)
+                        console.log('header cell clicked', column.name)
+                    column.on_click(column.name, $th)
+                })
             }
             $tr.appendChild($th)
         })
@@ -422,6 +432,11 @@ class VanillaTable {
 
             return value
         },
+        inline: (value) => {
+            if (!value) return ''
+
+            return '<span style="white-space: nowrap;">' + value + '</span>'
+        },
         link: (value) => {
             if (!value) return ''
 
@@ -438,7 +453,34 @@ class VanillaTable {
 
             if (isUrl(value))
                 return `<a href="${value}" target="_blank">${value}</a>`
-            else return value
+
+            // test whether has url
+            const arr = value.split()
+            let rebuilt = ''
+            let hasUrl = false
+            for (let i = 0; i < arr.length; i++) {
+                if (isUrl(arr[i])) {
+                    rebuilt += `<a href="${arr[i]}" target="_blank">${arr[i]}</a>`
+                    hasUrl = true
+                } else if (arr[i].startsWith('www.')) {
+                    console.log('starts with www.')
+                    rebuilt += `<a href="http://${arr[i]}" target="_blank">${arr[i]}</a>`
+                    hasUrl = true
+                } else rebuilt += arr[i]
+
+                rebuilt += ' '
+            }
+            if (hasUrl)
+                return rebuilt
+
+            // no url found
+            return value
+        },
+        fahrenheitWithCelsius: (value) => {
+            if (!value) return '&nbsp;'
+
+            return `<p>${value}&nbsp;°F</p>
+            <p class="is-size-7">${((value - 32) * 5 / 9).toFixed(2)}&nbsp;°C</p>`
         }
     }
 
@@ -470,7 +512,7 @@ class VanillaTable {
         }
 
         // Does pagination already exist? 
-        let $container = this.$table.parentElement.querySelector('.pagination-container')
+        let $container = this.$table.parentElement.parentElement.querySelector('.pagination-container')
         const containerExists = $container !== null
         // ...or do we need to create it?
         if (!containerExists) {
@@ -568,7 +610,7 @@ class VanillaTable {
         }
 
         if (!containerExists)
-            this.$table.parentElement.appendChild($container)
+            this.$table.parentElement.parentElement.appendChild($container)
     }
 
     static generateId() {
