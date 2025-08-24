@@ -1,36 +1,35 @@
 {% extends "layout.html" %}
-{% block title %}Palm Index{% endblock %}
+{% block title %}Palm Obsersavtions{% endblock %}
 {% block header %}
-<section class="hero is-primary">
+<section class="hero is-primary is-primary">
     <div class="hero-body">
-        <p class="title">Palm Index</p>
-        <p class="subtitle"></p>
+        <p class="title">Palm Observations</p>
     </div>
 </section>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/index_table.css') }}">
 {% endblock %}
 {% block content %}
 
 <div class="grid mb-1">
     <div class="cell is-col-span-2">
-        <label class="checkbox">
-            <input type="checkbox" checked="checked" id="filter-unobserved" onchange="onLoadIndexTable" />
-            Remove results without observations
-        </label>
     </div>
     <div class="cell">
-        <input type="text" id="search-input" class="input" placeholder="Search..." value="" />
+        <input type="text" id="lowest-survived-search-input" class="input" placeholder="Search..." value="" />
     </div>
 </div>
 
 <div>
-    <div id="table-placeholder"></div>
+    <div id="lowest-survived-table-placeholder"></div>
 </div>
 
 <script src="{{ url_for('static', filename='js/vanilla_table.js') }}"></script>
-<script src="{{ url_for('static', filename='js/palm_index_table.js') }}"></script>
-<script>
+<script src="{{ url_for('static', filename='js/palm_questions_lowest_surviving_table.js') }}"></script>
+<style>
+    th.is-sorted-asc::after {
+        content: "▲";
+    }
 
-</script>
-
+    th.is-sorted-desc::after {
+        content: "▼";
+    }
+</style>
 {% endblock %}
